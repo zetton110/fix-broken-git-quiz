@@ -75,9 +75,36 @@ emulator.add_listener("serial0-output-byte", byte => {
   if (outBuffer.length === 0) setTimeout(flushOutput, 0);
   outBuffer.push(byte);
 });
+// 問題を準備しているあいだ（muted）は、VMの出力を画面に出さない。
+// ページが送ったコマンドや準備中の表示を見せないためで、通知（OSC 777）だけを拾う。
+let muted = false;
+let held = [];
 function flushOutput() {
-  term.write(new Uint8Array(outBuffer));
+  let bytes = outBuffer;
   outBuffer = [];
+  if (muted) {
+    held.push(...bytes);
+    const text = String.fromCharCode(...held);
+    const pattern = /\x1b\]777;([^\x07]*)\x07/g;
+    let end = 0, match;
+    while (muted && (match = pattern.exec(text))) {
+      term.write(new Uint8Array(held.slice(match.index, pattern.lastIndex)));
+      end = pattern.lastIndex;
+      // プロンプトの通知が来たら準備は終わり。ここから先の出力（プロンプト）を画面に出す。
+      if (match[1].startsWith("quiz;prompt;")) muted = false;
+    }
+    if (muted) {
+      // 通知が途中で切れているかもしれないので、最後の ESC 以降だけ残す。
+      const esc = text.lastIndexOf("\x1b");
+      held = esc >= end ? held.slice(esc) : [];
+      return;
+    }
+    bytes = held.slice(end);
+    held = [];
+    setStatus("");
+    term.write("\x1b[2J\x1b[3J\x1b[H");
+  }
+  term.write(new Uint8Array(bytes));
 }
 
 const encoder = new TextEncoder();
@@ -85,7 +112,7 @@ function send(text) {
   emulator.serial_send_bytes(0, encoder.encode(text));
 }
 term.onData(data => {
-  if (state.ready) send(data);
+  if (state.ready && state.current && !muted) send(data);
 });
 
 emulator.add_listener("download-progress", e => {
@@ -118,10 +145,9 @@ function setStatus(text, isError = false) {
 function onPrompt(current, done) {
   if (!state.ready) {
     state.ready = true;
-    setStatus("");
+    setStatus("上の番号から問題を選ぶと、ここにその問題のターミナルが表示されます。");
     document.body.classList.add("ready");
-    send("clear; quiz\n");
-    term.focus();
+    send("clear\n");
   }
   if (current !== state.current) {
     state.current = current;
@@ -129,7 +155,7 @@ function onPrompt(current, done) {
     renderList();
   }
   if (current && done && !state.cleared.has(current)) markCleared(current);
-  // プロンプトが出るたび（コマンドを1つ実行するたび）に、リポジトリの中身の表示を更新する。
+  // プロンプトが出るたび（コマンドを1つ実行するたび）に、.git エクスプローラーを更新する。
   Explorer.refresh(current);
 }
 
@@ -206,8 +232,13 @@ function renderChat(quiz) {
 
 // ---- 画面 ----
 
+// 問題を始める（やり直すときも同じ）。VMには quiz <番号> を送るが、その入力や準備中の表示は画面に出さず、
+// 準備が終わってから、その問題のディレクトリにいるプロンプトだけを見せる。
 function startQuiz(n) {
-  if (!state.ready) return;
+  if (!state.ready || muted) return;
+  muted = true;
+  held = [];
+  setStatus(`問題${n} を準備しています…`);
   // Ctrl-U で入力途中の行を消してから送る。
   send(`\x15quiz ${n}\n`);
   term.focus();
@@ -226,13 +257,12 @@ function renderList() {
     mark.className = "mark";
     const cleared = state.cleared.has(n);
     mark.textContent = cleared ? "✓" : String(n);
-    if (cleared) {
-      button.classList.add("cleared");
-      mark.setAttribute("aria-label", `問題${n}、クリア済み`);
-    }
-    const title = document.createElement("span");
-    title.textContent = quiz.title;
-    button.append(mark, title);
+    if (cleared) button.classList.add("cleared");
+    // 一覧には番号だけを出す。タイトルはマウスを載せると出る。
+    const label = `問題${n}：${quiz.title}${cleared ? "（クリア済み）" : ""}`;
+    button.title = label;
+    button.setAttribute("aria-label", label);
+    button.append(mark);
     button.addEventListener("click", () => startQuiz(n));
     const li = document.createElement("li");
     li.append(button);
@@ -244,6 +274,8 @@ function renderList() {
 function renderPanel() {
   renderExplain();
   const quiz = QUIZZES[state.current - 1];
+  $("terminal-title").textContent = quiz ? `bash — ~/q${state.current}` : "bash";
+  $("panel").classList.toggle("started", Boolean(quiz));
   if (!quiz) return;
   $("panel-title").textContent = `問題${state.current}：${quiz.title}`;
   $("panel-situation").replaceChildren();

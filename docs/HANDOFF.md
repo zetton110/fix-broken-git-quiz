@@ -23,7 +23,7 @@ claude.ai のセッションで途中まで作り、続きをローカルで進�
 | VMイメージ | `vm/Dockerfile`、`scripts/build-image.sh` | 作成済み、ローカルでビルド済み |
 | 起動済み状態 | `scripts/build-state.mjs` | 作成済み、VM内で10問を解いてから保存する |
 | Webページ | `site/`、`scripts/build-site.sh` | 作成済み、ローカルのブラウザで確認済み |
-| リポジトリの中身の表示 | `site/explorer.js` | 作成済み、ローカルのブラウザで10問とも確認済み（未デプロイ） |
+| .git エクスプローラー | `site/explorer.js` | 作成済み、ローカルのブラウザで10問とも確認済み（未デプロイ） |
 | デプロイ | `.github/workflows/deploy.yml` | GitHub Actions でビルドとデプロイに成功（2026-11-14） |
 
 ## ビルドと確認の手順
@@ -78,7 +78,7 @@ VM内の bash が `/root/.bash_profile` 経由で `quiz.sh` を読み込みま�
 ページ側は xterm.js の `term.parser.registerOscHandler(777, handler)` で受け取る想定です。
 `prompt` の通知は、VMの準備完了の検知と、ページ側の状態の同期に使えます。
 
-## リポジトリの中身の表示
+## .git エクスプローラー
 
 ターミナルの下に、いまの問題のリポジトリ（`~/q<番号>`）の中身をクリックでたどれる画面があります（`site/explorer.js`）。
 
@@ -93,13 +93,13 @@ VM内の bash が `/root/.bash_profile` 経由で `quiz.sh` を読み込みま�
 - v86 の変換ツールと BIOS は、npm の `v86@0.5.473` と同じ版（コミット `315b2b0b758703ef0e6cc7b4088d6068f83f3c20`）の v86 リポジトリを `.cache/v86` に取得して使う
 - Dockerfile は v86 公式の `tools/docker/alpine/Dockerfile` がもと。`bash git nano less file` を足し、root のログインシェルを `/bin/bash` にしている
 - `memory_size`（256MB）、`vga_memory_size`、端末の大きさ（28行×100桁）は `scripts/build-state.mjs` と `site/main.js` で同じ値にする
-- ページは起動済み状態を `initial_state` で読み込む。復元の直後に送った入力はVMに届かないことがあるので、`quiz;prompt` の通知が来るまで改行を送り直し、通知が来たら `clear; quiz` を送る
+- ページは起動済み状態を `initial_state` で読み込む。復元の直後に送った入力はVMに届かないことがあるので、`quiz;prompt` の通知が来るまで改行を送り直し、通知が来たら `clear` を送って画面を空にする
 - 問題文とヒントは `site/quizzes.js` にある。番号とタイトルは `quiz.sh` と揃える
 - クリア状況は `localStorage` に保存する
 
 ## 残りの作業
 
-- リポジトリの中身の表示（`site/explorer.js`）のコミットと push
+- .git エクスプローラー（`site/explorer.js`）のコミットと push
 - GitHub Actions の各アクションが Node.js 20 向けで、非推奨の警告が出ている（動作には影響なし）
 
 ## 確かめたことと、確かめていないこと
@@ -113,12 +113,12 @@ VM内の bash が `/root/.bash_profile` 経由で `quiz.sh` を読み込みま�
 - ブラウザで、問題の選択、キー入力、ゴール表示、クリア状況の表示が動く
 - 各問題の「最初に試すコマンド」とヒントのコマンドが、説明どおりの出力になる
 - GitHub Actions でのビルドとデプロイが成功し、公開ページで問題9をゴールまで解ける
-- リポジトリの中身の表示が、10問とも壊れた箇所を示す（空の HEAD、空の参照、読めない index、壊れたオブジェクト、索引のない packfile）
+- .git エクスプローラーが、10問とも壊れた箇所を示す（空の HEAD、空の参照、読めない index、壊れたオブジェクト、索引のない packfile）
 - 問題9を解くと、作られた `.idx` が一覧に「更新」の印付きで現れる
 
 確かめていないこと：
 
-- リポジトリの中身の表示の、幅の広い画面（2列の配置）とダークモードでの見た目
+- .git エクスプローラーの、幅の広い画面（2列の配置）とダークモードでの見た目
 - Chrome 系以外のブラウザと、スマートフォンでの動作
 - `nano` の画面表示
 

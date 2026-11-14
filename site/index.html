@@ -14,61 +14,73 @@
   <p>ブラウザの中で Linux と本物の <code>git</code> が動きます。壊れたリポジトリを直すと、自動でゴール判定されます。</p>
 </header>
 
-<div class="layout">
-  <nav class="sidebar" aria-label="問題の一覧">
-    <div class="sidebar-head">
-      <h2>問題</h2>
-      <span id="progress" class="progress"></span>
-    </div>
+<nav class="quiz-nav" aria-label="問題の一覧">
+  <div class="quiz-nav-inner">
+    <span class="quiz-nav-label">問題</span>
     <ol id="quiz-list" class="quiz-list"></ol>
+    <span id="progress" class="progress"></span>
     <button id="clear-progress" class="link-button" type="button">クリア状況を消す</button>
-  </nav>
+  </div>
+</nav>
 
-  <main class="main">
-    <section id="panel" class="panel" aria-live="polite">
-      <h2 id="panel-title">問題を選んでください</h2>
+<main class="main">
+  <section id="panel" class="panel" aria-live="polite">
+    <h2 id="panel-title">問題を選んでください</h2>
+    <div class="panel-body">
       <div id="panel-chat" class="chat" hidden>
         <div class="chat-channel"># dev-help</div>
         <ol id="panel-chat-messages" class="chat-messages"></ol>
       </div>
-      <p id="panel-situation" class="situation" hidden></p>
-      <p id="panel-symptom">左の一覧から問題を選ぶと、壊れたリポジトリがターミナルに用意されます。ターミナルに <code>quiz 1</code> と入力しても始められます。</p>
-      <div id="panel-first" class="first" hidden>最初に試すコマンド：<code id="panel-first-command"></code></div>
-      <div id="panel-hints" class="hints"></div>
-    </section>
-
-    <div id="goal" class="goal" role="status" hidden>
-      <strong id="goal-text"></strong>
-      <button id="goal-next" type="button"></button>
+      <div class="panel-text">
+        <p id="panel-situation" class="situation" hidden></p>
+        <p id="panel-symptom">上の番号から問題を選ぶと、壊れたリポジトリがターミナルに用意されます。</p>
+        <div id="panel-first" class="first" hidden>最初に試すコマンド：<code id="panel-first-command"></code></div>
+        <div id="panel-hints" class="hints"></div>
+      </div>
     </div>
+  </section>
 
-    <details id="explain" class="explain" hidden>
-      <summary id="explain-title"></summary>
-      <div id="explain-body"></div>
-    </details>
+  <div id="goal" class="goal" role="status" hidden>
+    <strong id="goal-text"></strong>
+    <button id="goal-next" type="button"></button>
+  </div>
 
-    <div class="terminal-frame">
-      <div id="status" class="status">読み込んでいます…</div>
-      <div id="terminal"></div>
+  <details id="explain" class="explain" hidden>
+    <summary id="explain-title"></summary>
+    <div id="explain-body"></div>
+  </details>
+
+  <div class="workspace">
+    <div class="terminal-col">
+      <div class="terminal-window">
+        <div class="terminal-bar" aria-hidden="true">
+          <span class="terminal-dots"><i></i><i></i><i></i></span>
+          <span id="terminal-title" class="terminal-title">bash</span>
+        </div>
+        <div class="terminal-frame">
+          <div id="status" class="status">読み込んでいます…</div>
+          <div id="terminal"></div>
+        </div>
+      </div>
+      <p class="note"><code>quiz check</code> で未クリアの理由を表示できます。やり直すときは、上の番号をもう一度クリックします。エディタは <code>nano</code> が使えます。</p>
     </div>
-    <p class="note"><code>quiz check</code> で未クリアの理由を表示、<code>quiz &lt;番号&gt;</code> で問題をやり直せます。エディタは <code>nano</code> が使えます。</p>
 
     <section class="explorer" aria-labelledby="explorer-title">
       <div class="explorer-head">
-        <h2 id="explorer-title">リポジトリの中身 <span id="explorer-root" class="explorer-root"></span></h2>
+        <h2 id="explorer-title">.git エクスプローラー <span id="explorer-root" class="explorer-root"></span></h2>
         <div class="explorer-actions">
           <button id="explorer-back" type="button" disabled>← 戻る</button>
           <button id="explorer-overview" type="button" disabled>参照のつながり</button>
         </div>
       </div>
-      <p class="explorer-lead">ファイル名やハッシュ値をクリックすると、<code>.git</code> の中をたどれます。コマンドを実行するたびに、最新の状態に更新されます。</p>
+      <p class="explorer-lead">ファイル名やハッシュ値をクリックすると、<code>.git</code> の中をたどれます。コマンドを実行するたびに更新されます。</p>
       <div class="explorer-body">
         <div id="explorer-tree" class="explorer-tree"></div>
         <div id="explorer-detail" class="explorer-detail"></div>
       </div>
     </section>
-  </main>
-</div>
+  </div>
+</main>
 
 <script src="vendor/xterm.js"></script>
 <script src="vendor/libv86.js"></script>

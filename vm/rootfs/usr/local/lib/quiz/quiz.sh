@@ -106,7 +106,7 @@ __quiz_check() (
 __quiz_goal() {
   printf '\n\033[1;32m  ゴール！ 問題%s をクリアしました。\033[0m\n' "$QUIZ_CURRENT"
   if [ "$QUIZ_CURRENT" -lt "$QUIZ_COUNT" ]; then
-    printf '  次の問題: quiz %s\n\n' "$((QUIZ_CURRENT + 1))"
+    printf '\n'
   else
     printf '  これで全問クリアです。\n\n'
   fi

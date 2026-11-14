@@ -707,7 +707,7 @@ const Explorer = (() => {
     $("explorer-root").textContent = model ? `~/q${quiz}` : "";
     if (!model) {
       $("explorer-tree").replaceChildren();
-      detail.replaceChildren(el("p", { class: "empty" }, quiz ? `~/q${quiz} がありません。` : "問題を始めると、リポジトリの中身がここに表示されます。"));
+      detail.replaceChildren(el("p", { class: "empty" }, quiz ? `~/q${quiz} がありません。` : "問題を始めると、リポジトリの中身（.git の中）がここに表示されます。"));
       return;
     }
     renderTree();
