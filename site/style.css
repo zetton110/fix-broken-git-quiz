@@ -130,7 +130,8 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 /* ---- 問題を選ぶ前の画面（使い方） ---- */
 .panel.started .onboarding { display: none; }
 .panel:not(.started) .panel-body { display: none; }
-.onboarding-lead { max-width: 60em; }
+/* 文の途中で折り返さないよう、区切りごとにまとめて折り返す。 */
+.onboarding-lead span { display: inline-block; }
 .onboarding-steps {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -251,7 +252,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 
 /* ---- ゴールしたときのダイアログ（ゴールの知らせ・解説・次の問題へ） ---- */
 .goal-dialog {
-  width: min(680px, calc(100vw - 32px));
+  width: min(760px, calc(100vw - 32px));
   max-height: calc(100vh - 48px);
   padding: 0;
   border: 1px solid var(--border);
@@ -285,8 +286,41 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
   text-align: center;
 }
 .goal-body { flex: 1; min-height: 0; padding: 14px 20px 6px; overflow-y: auto; }
-.goal-body h3 { margin: 0; font-size: 1rem; }
-.goal-body p { margin: 8px 0; line-height: 1.75; }
+.goal-body h3 {
+  margin: 18px 0 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.goal-body h3:first-child { margin-top: 0; }
+.goal-body a { color: var(--accent); text-underline-offset: 2px; }
+.goal-body a code { color: inherit; }
+/* 要点：原因・直し方・覚えておくこと */
+.explain-points {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 8px 14px;
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 4px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  background: var(--accent-soft);
+  line-height: 1.7;
+}
+.explain-points dt { color: var(--accent); font-weight: 700; white-space: nowrap; }
+.explain-points dd { margin: 0; }
+/* くわしい説明：見出しで何の話かを先に示す */
+.explain-details section + section { margin-top: 12px; }
+.explain-details h4 { margin: 0; font-size: 0.95rem; }
+.explain-details p { margin: 2px 0 0; color: var(--muted); font-size: 0.92rem; line-height: 1.75; }
+.explain-details p code, .explain-details p a { color: var(--text); }
+.explain-details p a { color: var(--accent); }
+.explain-refs { margin: 0 0 10px; padding-left: 20px; font-size: 0.9rem; line-height: 1.8; }
+@media (max-width: 560px) {
+  .explain-points { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .explain-points dd + dt { margin-top: 8px; }
+}
 .goal-actions {
   display: flex;
   justify-content: flex-end;

@@ -192,9 +192,7 @@ function showGoal(n, justCleared) {
   if (!justCleared) $("goal-text").textContent = `問題${n}：${quiz.title}`;
   else if (next) $("goal-text").textContent = `ゴール！ 問題${n} をクリアしました`;
   else $("goal-text").textContent = `ゴール！ 問題${n} をクリアしました。これで全問クリアです`;
-  $("explain-title").textContent = "解説";
-  $("explain-body").replaceChildren(...quiz.explain.map(text => rich(document.createElement("p"), text)));
-  $("explain-body").scrollTop = 0;
+  renderExplain(quiz.explain);
   const button = $("goal-next");
   button.hidden = !next;
   button.textContent = next ? `問題${next} へ進む` : "";
@@ -232,12 +230,64 @@ function renderExplainButton() {
   $("explain-open").hidden = !state.current || !state.cleared.has(state.current);
 }
 
-// 文章を要素に入れる。`…` で囲んだ部分はコードとして表示する。
-function rich(el, text) {
-  text.split("`").forEach((part, i) => {
-    if (i % 2 === 0) el.append(part);
-    else el.append(Object.assign(document.createElement("code"), { textContent: part }));
-  });
+// 解説を組み立てる。最初に要点（原因・直し方・覚えておくこと）、次に見出しつきのくわしい説明、
+// 最後に、文中でリンクした Pro Git の箇所の一覧を並べる。
+function renderExplain(explain) {
+  const el = (tag, className, text) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text) node.textContent = text;
+    return node;
+  };
+  const used = new Set();
+  const points = el("dl", "explain-points");
+  for (const [label, text] of explain.points) points.append(el("dt", "", label), rich(el("dd"), text, used));
+  const details = el("div", "explain-details");
+  for (const [heading, text] of explain.details) {
+    const section = el("section");
+    section.append(el("h4", "", heading), rich(el("p"), text, used));
+    details.append(section);
+  }
+  const refs = el("ul", "explain-refs");
+  for (const key of used) {
+    const li = el("li");
+    li.append(bookLink(key, LINKS[key][1]));
+    refs.append(li);
+  }
+  $("explain-body").replaceChildren(
+    el("h3", "", "ポイント"), points,
+    el("h3", "", "くわしく"), details,
+    el("h3", "", "Pro Git で読む"), refs);
+  document.querySelector(".goal-body").scrollTop = 0;
+}
+
+// Pro Git 日本語版の該当箇所へのリンク。別のタブで開く。
+function bookLink(key, text) {
+  const a = document.createElement("a");
+  a.href = BOOK + encodeURI(LINKS[key][0]);
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.title = `Pro Git：${LINKS[key][1]}`;
+  if (text) a.textContent = text;
+  return a;
+}
+
+// 文章を要素に入れる。`…` で囲んだ部分はコードとして、[文字](キー) は Pro Git へのリンクとして表示する。
+// used を渡すと、リンクしたキーをそこに記録する。
+function rich(el, text, used) {
+  const pattern = /\[([^\]]+)\]\(([a-z-]+)\)|`([^`]+)`/g;
+  let last = 0, match;
+  while ((match = pattern.exec(text))) {
+    el.append(text.slice(last, match.index));
+    last = pattern.lastIndex;
+    if (match[3] !== undefined) {
+      el.append(Object.assign(document.createElement("code"), { textContent: match[3] }));
+    } else {
+      el.append(rich(bookLink(match[2]), match[1]));
+      if (used) used.add(match[2]);
+    }
+  }
+  el.append(text.slice(last));
   return el;
 }
 
