@@ -1,0 +1,9 @@
+[user]
+	name = Taro
+	email = taro@example.com
+[init]
+	defaultBranch = main
+[core]
+	quotepath = false
+[color]
+	ui = auto

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>壊れたGitリポジトリを手で直す問題集</title>
+<meta name="description" content="ブラウザのターミナルで本物の git を動かし、壊れたリポジトリを直す10問の問題集。">
+<link rel="stylesheet" href="vendor/xterm.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <h1>壊れたGitリポジトリを手で直す問題集</h1>
+  <p>ブラウザの中で Linux と本物の <code>git</code> が動きます。壊れたリポジトリを直すと、自動でゴール判定されます。</p>
+</header>
+
+<div class="layout">
+  <nav class="sidebar" aria-label="問題の一覧">
+    <div class="sidebar-head">
+      <h2>問題</h2>
+      <span id="progress" class="progress"></span>
+    </div>
+    <ol id="quiz-list" class="quiz-list"></ol>
+    <button id="clear-progress" class="link-button" type="button">クリア状況を消す</button>
+  </nav>
+
+  <main class="main">
+    <section id="panel" class="panel" aria-live="polite">
+      <h2 id="panel-title">問題を選んでください</h2>
+      <p id="panel-symptom">左の一覧から問題を選ぶと、壊れたリポジトリがターミナルに用意されます。ターミナルに <code>quiz 1</code> と入力しても始められます。</p>
+      <div id="panel-first" class="first" hidden>最初に試すコマンド：<code id="panel-first-command"></code></div>
+      <div id="panel-hints" class="hints"></div>
+    </section>
+
+    <div id="goal" class="goal" role="status" hidden>
+      <strong id="goal-text"></strong>
+      <button id="goal-next" type="button"></button>
+    </div>
+
+    <div class="terminal-frame">
+      <div id="status" class="status">読み込んでいます…</div>
+      <div id="terminal"></div>
+    </div>
+    <p class="note"><code>quiz check</code> で未クリアの理由を表示、<code>quiz &lt;番号&gt;</code> で問題をやり直せます。エディタは <code>nano</code> が使えます。</p>
+  </main>
+</div>
+
+<script src="vendor/xterm.js"></script>
+<script src="vendor/libv86.js"></script>
+<script src="quizzes.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

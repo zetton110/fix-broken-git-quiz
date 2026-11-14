@@ -1,0 +1,16 @@
+{
+  "name": "fix-broken-git-quiz",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bash scripts/test-native.sh",
+    "build:image": "bash scripts/build-image.sh",
+    "build:state": "node scripts/build-state.mjs",
+    "build:site": "bash scripts/build-site.sh",
+    "build": "npm run build:image && npm run build:state && npm run build:site"
+  },
+  "devDependencies": {
+    "@xterm/xterm": "6.0.0",
+    "v86": "0.5.473"
+  }
+}
