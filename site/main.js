@@ -169,15 +169,39 @@ function renderExplain() {
   box.hidden = !quiz || !state.cleared.has(state.current);
   if (box.hidden) return;
   $("explain-title").textContent = `問題${state.current} の解説`;
-  $("explain-body").replaceChildren(...quiz.explain.map(text => {
-    const p = document.createElement("p");
-    // `…` で囲んだ部分をコードとして表示する。
-    text.split("`").forEach((part, i) => {
-      if (i % 2 === 0) p.append(part);
-      else p.append(Object.assign(document.createElement("code"), { textContent: part }));
-    });
-    return p;
+  $("explain-body").replaceChildren(...quiz.explain.map(text => rich(document.createElement("p"), text)));
+}
+
+// 文章を要素に入れる。`…` で囲んだ部分はコードとして表示する。
+function rich(el, text) {
+  text.split("`").forEach((part, i) => {
+    if (i % 2 === 0) el.append(part);
+    else el.append(Object.assign(document.createElement("code"), { textContent: part }));
+  });
+  return el;
+}
+
+// 問題が起きた場面を、チャットの会話として表示する。
+const SPEAKERS = { k: { name: "後輩", mark: "後" }, s: { name: "先輩（あなた）", mark: "先" } };
+function renderChat(quiz) {
+  $("panel-chat-messages").replaceChildren(...quiz.chat.map(([who, text], i) => {
+    const li = document.createElement("li");
+    li.className = `chat-message ${who === "s" ? "senpai" : "kohai"}`;
+    const avatar = Object.assign(document.createElement("span"), { className: "chat-avatar", textContent: SPEAKERS[who].mark });
+    avatar.setAttribute("aria-hidden", "true");
+    const body = document.createElement("div");
+    const head = document.createElement("div");
+    head.className = "chat-head";
+    head.append(
+      Object.assign(document.createElement("strong"), { textContent: SPEAKERS[who].name }),
+      Object.assign(document.createElement("span"), { className: "chat-time", textContent: `10:${String(12 + i).padStart(2, "0")}` }));
+    body.append(head, rich(document.createElement("p"), text));
+    li.append(avatar, body);
+    return li;
   }));
+  $("panel-chat").hidden = false;
+  rich($("panel-situation"), quiz.situation);
+  $("panel-situation").hidden = false;
 }
 
 // ---- 画面 ----
@@ -222,6 +246,8 @@ function renderPanel() {
   const quiz = QUIZZES[state.current - 1];
   if (!quiz) return;
   $("panel-title").textContent = `問題${state.current}：${quiz.title}`;
+  $("panel-situation").replaceChildren();
+  renderChat(quiz);
   $("panel-symptom").textContent = quiz.symptom;
   $("panel-first-command").textContent = quiz.first;
   $("panel-first").hidden = false;

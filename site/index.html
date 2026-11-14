@@ -27,6 +27,11 @@
   <main class="main">
     <section id="panel" class="panel" aria-live="polite">
       <h2 id="panel-title">問題を選んでください</h2>
+      <div id="panel-chat" class="chat" hidden>
+        <div class="chat-channel"># dev-help</div>
+        <ol id="panel-chat-messages" class="chat-messages"></ol>
+      </div>
+      <p id="panel-situation" class="situation" hidden></p>
       <p id="panel-symptom">左の一覧から問題を選ぶと、壊れたリポジトリがターミナルに用意されます。ターミナルに <code>quiz 1</code> と入力しても始められます。</p>
       <div id="panel-first" class="first" hidden>最初に試すコマンド：<code id="panel-first-command"></code></div>
       <div id="panel-hints" class="hints"></div>

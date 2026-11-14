@@ -128,6 +128,44 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 .panel h2 { font-size: 1.1rem; }
 .panel p { margin: 6px 0 0; }
 .first { margin-top: 8px; }
+
+/* ---- 問題が起きた場面の会話 ---- */
+.chat {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.chat[hidden] { display: none; }
+.chat-channel {
+  padding: 5px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.chat-messages { list-style: none; margin: 0; padding: 6px 0; }
+.chat-message { display: flex; gap: 10px; padding: 6px 14px; }
+.chat-message:hover { background: var(--bg); }
+.chat-avatar {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin-top: 3px;
+  border-radius: 6px;
+  background: var(--commit-soft);
+  color: var(--commit);
+  font-weight: 700;
+  line-height: 36px;
+  text-align: center;
+}
+.senpai .chat-avatar { background: var(--accent-soft); color: var(--accent); }
+.chat-head { display: flex; align-items: baseline; gap: 8px; line-height: 1.4; }
+.chat-time { color: var(--muted); font-size: 0.75rem; }
+.panel .chat-message p { margin: 0; line-height: 1.6; }
+.panel .situation { margin-top: 10px; }
+.situation[hidden] { display: none; }
 .hints { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .hints:empty { display: none; }
 .hints details {
