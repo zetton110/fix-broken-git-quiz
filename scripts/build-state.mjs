@@ -15,8 +15,8 @@ const QUIZ_COUNT = 10;
 // ページ側（site/main.js）と同じ値にすること。
 const MEMORY_SIZE = 256 * 1024 * 1024;
 const VGA_MEMORY_SIZE = 2 * 1024 * 1024;
-const ROWS = 28;
-const COLS = 100;
+const ROWS = 34;
+const COLS = 120;
 
 const emulator = new V86({
     wasm_path: path.join(ROOT, "node_modules/v86/build/v86.wasm"),

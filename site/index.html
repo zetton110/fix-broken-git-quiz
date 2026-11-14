@@ -77,14 +77,14 @@
 
     <section id="explorer" class="explorer collapsed" aria-labelledby="explorer-title">
       <div class="explorer-head">
+        <button id="explorer-toggle" class="explorer-toggle" type="button" aria-expanded="false" aria-controls="explorer-content" aria-label=".git エクスプローラーを開く" title="開く">＋</button>
         <h2 id="explorer-title">.git エクスプローラー <span id="explorer-root" class="explorer-root"></span></h2>
         <div class="explorer-actions">
           <button id="explorer-back" class="explorer-nav" type="button" disabled>← 戻る</button>
           <button id="explorer-overview" class="explorer-nav" type="button" disabled>参照のつながり</button>
-          <button id="explorer-toggle" type="button" aria-expanded="false" aria-controls="explorer-content">開く</button>
         </div>
       </div>
-      <p class="explorer-closed-note"><code>.git</code> の中を、コマンドを使わずにクリックでたどれます。調べ方に迷ったときに開いてください。</p>
+      <p class="explorer-closed-note"><code>.git</code> の中を、コマンドを使わずにクリックでたどれます。調べ方に迷ったときに ＋ で開いてください。</p>
       <div id="explorer-content" class="explorer-content">
         <p class="explorer-lead">ファイル名やハッシュ値をクリックすると、<code>.git</code> の中をたどれます。コマンドを実行するたびに更新されます。</p>
         <div class="explorer-body">

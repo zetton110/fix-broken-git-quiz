@@ -3,8 +3,8 @@
 // scripts/build-state.mjs と同じ値にすること。
 const MEMORY_SIZE = 256 * 1024 * 1024;
 const VGA_MEMORY_SIZE = 2 * 1024 * 1024;
-const ROWS = 28;
-const COLS = 100;
+const ROWS = 34;
+const COLS = 120;
 const STORAGE_KEY = "fix-broken-git-quiz:cleared";
 
 const $ = id => document.getElementById(id);
@@ -272,7 +272,9 @@ $("explorer-toggle").addEventListener("click", () => {
   explorerOpen = !explorerOpen;
   $("explorer").classList.toggle("collapsed", !explorerOpen);
   const button = $("explorer-toggle");
-  button.textContent = explorerOpen ? "たたむ" : "開く";
+  button.textContent = explorerOpen ? "−" : "＋";
+  button.title = explorerOpen ? "たたむ" : "開く";
+  button.setAttribute("aria-label", explorerOpen ? ".git エクスプローラーをたたむ" : ".git エクスプローラーを開く");
   button.setAttribute("aria-expanded", String(explorerOpen));
   if (explorerOpen && state.ready) Explorer.refresh(state.current);
 });
@@ -348,12 +350,11 @@ function renderPanel() {
 }
 
 $("clear-progress").addEventListener("click", () => {
-  if (!confirm("クリア状況を消しますか？")) return;
+  if (!confirm("クリア状況を消して、最初の画面に戻りますか？")) return;
   state.cleared.clear();
   saveCleared();
-  renderList();
-  renderExplainButton();
-  renderOnboarding();
+  // ページを読み込み直して、VMごと最初の状態（問題を選ぶ前の画面）に戻す。
+  location.reload();
 });
 
 renderList();

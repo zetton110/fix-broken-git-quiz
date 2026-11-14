@@ -92,7 +92,7 @@ VM内の bash が `/root/.bash_profile` 経由で `quiz.sh` を読み込みま�
 
 - v86 の変換ツールと BIOS は、npm の `v86@0.5.473` と同じ版（コミット `315b2b0b758703ef0e6cc7b4088d6068f83f3c20`）の v86 リポジトリを `.cache/v86` に取得して使う
 - Dockerfile は v86 公式の `tools/docker/alpine/Dockerfile` がもと。`bash git nano less file` を足し、root のログインシェルを `/bin/bash` にしている
-- `memory_size`（256MB）、`vga_memory_size`、端末の大きさ（28行×100桁）は `scripts/build-state.mjs` と `site/main.js` で同じ値にする
+- `memory_size`（256MB）、`vga_memory_size`、端末の大きさ（34行×120桁）は `scripts/build-state.mjs` と `site/main.js` で同じ値にする
 - ページは起動済み状態を `initial_state` で読み込む。復元の直後に送った入力はVMに届かないことがあるので、`quiz;prompt` の通知が来るまで改行を送り直し、通知が来たら `clear` を送って画面を空にする
 - 問題文とヒントは `site/quizzes.js` にある。番号とタイトルは `quiz.sh` と揃える
 - クリア状況は `localStorage` に保存する
