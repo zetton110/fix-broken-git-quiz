@@ -172,6 +172,17 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
   cursor: pointer;
 }
 
+.explain {
+  margin-top: 12px;
+  padding: 10px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.explain summary { cursor: pointer; font-weight: 700; }
+.explain p { margin: 8px 0; }
+.explain p:last-child { margin-bottom: 4px; }
+
 .terminal-frame {
   position: relative;
   margin-top: 12px;

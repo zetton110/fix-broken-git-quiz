@@ -136,6 +136,7 @@ function onPrompt(current, done) {
 function onStart(n) {
   state.current = n;
   $("goal").hidden = true;
+  $("explain").open = false;
   renderPanel();
   renderList();
 }
@@ -151,12 +152,32 @@ function onGoal(n) {
   button.textContent = next ? `問題${next} へ進む` : "";
   button.onclick = () => startQuiz(next);
   $("goal").hidden = false;
+  $("explain").open = true;
 }
 
 function markCleared(n) {
   state.cleared.add(n);
   saveCleared();
   renderList();
+  renderExplain();
+}
+
+// 解説は、クリアしたことのある問題にだけ表示する。クリアした直後は開いた状態にする。
+function renderExplain() {
+  const quiz = QUIZZES[state.current - 1];
+  const box = $("explain");
+  box.hidden = !quiz || !state.cleared.has(state.current);
+  if (box.hidden) return;
+  $("explain-title").textContent = `問題${state.current} の解説`;
+  $("explain-body").replaceChildren(...quiz.explain.map(text => {
+    const p = document.createElement("p");
+    // `…` で囲んだ部分をコードとして表示する。
+    text.split("`").forEach((part, i) => {
+      if (i % 2 === 0) p.append(part);
+      else p.append(Object.assign(document.createElement("code"), { textContent: part }));
+    });
+    return p;
+  }));
 }
 
 // ---- 画面 ----
@@ -197,6 +218,7 @@ function renderList() {
 }
 
 function renderPanel() {
+  renderExplain();
   const quiz = QUIZZES[state.current - 1];
   if (!quiz) return;
   $("panel-title").textContent = `問題${state.current}：${quiz.title}`;
@@ -226,6 +248,7 @@ $("clear-progress").addEventListener("click", () => {
   state.cleared.clear();
   saveCleared();
   renderList();
+  renderExplain();
 });
 
 renderList();
