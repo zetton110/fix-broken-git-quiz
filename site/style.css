@@ -596,6 +596,21 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 }
 @media (min-width: 1480px) {
   .workspace { grid-template-columns: max-content minmax(0, 1fr); align-items: start; }
+  /* 横に並べるときは、.git エクスプローラーの高さをターミナルの窓に合わせる。
+     ターミナルの下の注記は2行目に送り、1行目にターミナルの窓とエクスプローラーだけを置く。 */
+  .terminal-col { display: contents; }
+  .terminal-window { grid-column: 1; grid-row: 1; }
+  .terminal-col .note { grid-column: 1; grid-row: 2; margin-top: -8px; }
+  .explorer { grid-column: 2; grid-row: 1; }
+  /* contain: size で中身の高さを行の高さに影響させず、ターミナルの高さに引き伸ばす。中身は欄の中でスクロールする。 */
+  .explorer:not(.collapsed) { align-self: stretch; contain: size; display: flex; flex-direction: column; }
+  .explorer:not(.collapsed) .explorer-content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .explorer:not(.collapsed) .explorer-body { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); }
+  .explorer:not(.collapsed) .explorer-tree,
+  .explorer:not(.collapsed) .explorer-detail { height: auto; min-height: 0; }
+  @container (max-width: 580px) {
+    .explorer:not(.collapsed) .explorer-body { grid-template-rows: 150px minmax(0, 1fr); }
+  }
 }
 @media (max-width: 700px) {
   .site-header { padding: 12px 16px 4px; }
