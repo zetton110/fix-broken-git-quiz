@@ -25,30 +25,40 @@
 
 <main class="main">
   <section id="panel" class="panel" aria-live="polite">
-    <h2 id="panel-title">問題を選んでください</h2>
+    <h2 id="panel-title">使い方</h2>
+    <div id="onboarding" class="onboarding">
+      <p class="onboarding-lead">あなたは先輩エンジニアです。後輩から「Git が壊れました」と相談が来るので、預かったリポジトリを調べて直してください。全部で10問あります。</p>
+      <ol class="onboarding-steps">
+        <li><span class="step-mark" aria-hidden="true">1</span><div><strong>問題を選ぶ</strong><p>上の番号をクリックすると、壊れたリポジトリが用意されます。途中の番号からでも始められます。</p></div></li>
+        <li><span class="step-mark" aria-hidden="true">2</span><div><strong>状況を読む</strong><p>後輩からの Slack と状況設定を読み、「最初に試すコマンド」で同じエラーを出してみます。</p></div></li>
+        <li><span class="step-mark" aria-hidden="true">3</span><div><strong>ターミナルで調べて直す</strong><p>下のターミナルで本物の <code>git</code> が動きます。<code>.git</code> の中を調べ、原因を見つけて直します。</p></div></li>
+        <li><span class="step-mark" aria-hidden="true">4</span><div><strong>直るとゴール</strong><p>リポジトリが直ると自動で判定され、解説が表示されます。</p></div></li>
+      </ol>
+      <ul class="onboarding-tips">
+        <li>行き詰まったら、問題文の下の<strong>ヒント</strong>を順に開きます。最後のヒントは解答例です。</li>
+        <li>どのコマンドで調べればよいか迷ったら、<strong>.git エクスプローラー</strong>を開くと、<code>.git</code> の中をクリックでたどれます。</li>
+        <li><code>quiz check</code> で、まだ直っていない理由を表示できます。やり直すときは、同じ番号をもう一度クリックします。</li>
+      </ul>
+      <button id="onboarding-start" class="onboarding-start" type="button" disabled>読み込んでいます…</button>
+    </div>
     <div class="panel-body">
-      <div id="panel-chat" class="chat" hidden>
-        <div class="chat-channel"># dev-help</div>
-        <ol id="panel-chat-messages" class="chat-messages"></ol>
+      <div class="panel-chat-col">
+        <h3 class="panel-heading">今朝のSlack通知</h3>
+        <div id="panel-chat" class="chat" hidden>
+          <div class="chat-channel"># dev-help</div>
+          <ol id="panel-chat-messages" class="chat-messages"></ol>
+        </div>
       </div>
       <div class="panel-text">
+        <h3 class="panel-heading">状況設定</h3>
         <p id="panel-situation" class="situation" hidden></p>
-        <p id="panel-symptom">上の番号から問題を選ぶと、壊れたリポジトリがターミナルに用意されます。</p>
+        <p id="panel-symptom"></p>
         <div id="panel-first" class="first" hidden>最初に試すコマンド：<code id="panel-first-command"></code></div>
         <div id="panel-hints" class="hints"></div>
+        <button id="explain-open" class="explain-open" type="button" hidden>✓ クリア済み：解説を見る</button>
       </div>
     </div>
   </section>
-
-  <div id="goal" class="goal" role="status" hidden>
-    <strong id="goal-text"></strong>
-    <button id="goal-next" type="button"></button>
-  </div>
-
-  <details id="explain" class="explain" hidden>
-    <summary id="explain-title"></summary>
-    <div id="explain-body"></div>
-  </details>
 
   <div class="workspace">
     <div class="terminal-col">
@@ -62,25 +72,44 @@
           <div id="terminal"></div>
         </div>
       </div>
-      <p class="note"><code>quiz check</code> で未クリアの理由を表示できます。やり直すときは、上の番号をもう一度クリックします。エディタは <code>nano</code> が使えます。</p>
+      <p class="note"><code>quiz check</code> で未クリアの理由を表示できます。やり直すときは、上の番号をもう一度クリックします。</p>
     </div>
 
-    <section class="explorer" aria-labelledby="explorer-title">
+    <section id="explorer" class="explorer collapsed" aria-labelledby="explorer-title">
       <div class="explorer-head">
         <h2 id="explorer-title">.git エクスプローラー <span id="explorer-root" class="explorer-root"></span></h2>
         <div class="explorer-actions">
-          <button id="explorer-back" type="button" disabled>← 戻る</button>
-          <button id="explorer-overview" type="button" disabled>参照のつながり</button>
+          <button id="explorer-back" class="explorer-nav" type="button" disabled>← 戻る</button>
+          <button id="explorer-overview" class="explorer-nav" type="button" disabled>参照のつながり</button>
+          <button id="explorer-toggle" type="button" aria-expanded="false" aria-controls="explorer-content">開く</button>
         </div>
       </div>
-      <p class="explorer-lead">ファイル名やハッシュ値をクリックすると、<code>.git</code> の中をたどれます。コマンドを実行するたびに更新されます。</p>
-      <div class="explorer-body">
-        <div id="explorer-tree" class="explorer-tree"></div>
-        <div id="explorer-detail" class="explorer-detail"></div>
+      <p class="explorer-closed-note"><code>.git</code> の中を、コマンドを使わずにクリックでたどれます。調べ方に迷ったときに開いてください。</p>
+      <div id="explorer-content" class="explorer-content">
+        <p class="explorer-lead">ファイル名やハッシュ値をクリックすると、<code>.git</code> の中をたどれます。コマンドを実行するたびに更新されます。</p>
+        <div class="explorer-body">
+          <div id="explorer-tree" class="explorer-tree"></div>
+          <div id="explorer-detail" class="explorer-detail"></div>
+        </div>
       </div>
     </section>
   </div>
 </main>
+
+<dialog id="goal-dialog" class="goal-dialog" aria-labelledby="goal-text">
+  <div class="goal-head">
+    <span id="goal-badge" class="goal-badge" aria-hidden="true">✓</span>
+    <h2 id="goal-text" tabindex="-1" autofocus></h2>
+  </div>
+  <div class="goal-body">
+    <h3 id="explain-title"></h3>
+    <div id="explain-body"></div>
+  </div>
+  <div class="goal-actions">
+    <button id="goal-close" class="goal-close" type="button">閉じる</button>
+    <button id="goal-next" class="goal-next" type="button"></button>
+  </div>
+</dialog>
 
 <script src="vendor/xterm.js"></script>
 <script src="vendor/libv86.js"></script>

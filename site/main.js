@@ -78,6 +78,7 @@ emulator.add_listener("serial0-output-byte", byte => {
 // 問題を準備しているあいだ（muted）は、VMの出力を画面に出さない。
 // ページが送ったコマンドや準備中の表示を見せないためで、通知（OSC 777）だけを拾う。
 let muted = false;
+let startSeen = false;
 let held = [];
 function flushOutput() {
   let bytes = outBuffer;
@@ -90,8 +91,10 @@ function flushOutput() {
     while (muted && (match = pattern.exec(text))) {
       term.write(new Uint8Array(held.slice(match.index, pattern.lastIndex)));
       end = pattern.lastIndex;
-      // プロンプトの通知が来たら準備は終わり。ここから先の出力（プロンプト）を画面に出す。
-      if (match[1].startsWith("quiz;prompt;")) muted = false;
+      // 問題の開始の通知のあとにプロンプトの通知が来たら準備は終わり。ここから先の出力（プロンプト）を画面に出す。
+      // 開始より前のプロンプトの通知は、それ以前の入力（起動時に送った改行など）のものなので待ち続ける。
+      if (match[1].startsWith("quiz;start;")) startSeen = true;
+      else if (startSeen && match[1].startsWith("quiz;prompt;")) muted = false;
     }
     if (muted) {
       // 通知が途中で切れているかもしれないので、最後の ESC 以降だけ残す。
@@ -147,6 +150,7 @@ function onPrompt(current, done) {
     state.ready = true;
     setStatus("上の番号から問題を選ぶと、ここにその問題のターミナルが表示されます。");
     document.body.classList.add("ready");
+    renderOnboarding();
     send("clear\n");
   }
   if (current !== state.current) {
@@ -155,47 +159,77 @@ function onPrompt(current, done) {
     renderList();
   }
   if (current && done && !state.cleared.has(current)) markCleared(current);
-  // プロンプトが出るたび（コマンドを1つ実行するたび）に、.git エクスプローラーを更新する。
-  Explorer.refresh(current);
+  // プロンプトが出るたび（コマンドを1つ実行するたび）に、.git エクスプローラーを更新する。たたんでいるあいだは読まない。
+  if (explorerOpen) Explorer.refresh(current);
 }
 
 function onStart(n) {
   state.current = n;
-  $("goal").hidden = true;
-  $("explain").open = false;
+  if ($("goal-dialog").open) $("goal-dialog").close();
   renderPanel();
   renderList();
 }
 
 function onGoal(n) {
   markCleared(n);
-  const next = n < QUIZZES.length ? n + 1 : 0;
-  $("goal-text").textContent = next
-    ? `ゴール！ 問題${n} をクリアしました。`
-    : `ゴール！ 問題${n} をクリアしました。これで全問クリアです。`;
-  const button = $("goal-next");
-  button.hidden = !next;
-  button.textContent = next ? `問題${next} へ進む` : "";
-  button.onclick = () => startQuiz(next);
-  $("goal").hidden = false;
-  $("explain").open = true;
+  showGoal(n, true);
 }
 
 function markCleared(n) {
   state.cleared.add(n);
   saveCleared();
   renderList();
-  renderExplain();
+  renderExplainButton();
 }
 
-// 解説は、クリアしたことのある問題にだけ表示する。クリアした直後は開いた状態にする。
-function renderExplain() {
-  const quiz = QUIZZES[state.current - 1];
-  const box = $("explain");
-  box.hidden = !quiz || !state.cleared.has(state.current);
-  if (box.hidden) return;
-  $("explain-title").textContent = `問題${state.current} の解説`;
+// ゴールしたときに、ゴールの知らせ・解説・次の問題へ進むボタンをモーダルダイアログで表示する。
+// クリア済みの問題では、問題文の下のボタンから同じダイアログで解説を読み返せる（justCleared = false）。
+function showGoal(n, justCleared) {
+  const quiz = QUIZZES[n - 1];
+  const dialog = $("goal-dialog");
+  const next = n < QUIZZES.length ? n + 1 : 0;
+  dialog.classList.toggle("review", !justCleared);
+  if (!justCleared) $("goal-text").textContent = `問題${n}：${quiz.title}`;
+  else if (next) $("goal-text").textContent = `ゴール！ 問題${n} をクリアしました`;
+  else $("goal-text").textContent = `ゴール！ 問題${n} をクリアしました。これで全問クリアです`;
+  $("explain-title").textContent = "解説";
   $("explain-body").replaceChildren(...quiz.explain.map(text => rich(document.createElement("p"), text)));
+  $("explain-body").scrollTop = 0;
+  const button = $("goal-next");
+  button.hidden = !next;
+  button.textContent = next ? `問題${next} へ進む` : "";
+  button.onclick = () => {
+    dialog.close();
+    startQuiz(next);
+  };
+  if (!dialog.open) dialog.showModal();
+}
+
+$("goal-close").addEventListener("click", () => $("goal-dialog").close());
+// 枠の外（背景）をクリックしても閉じる。
+$("goal-dialog").addEventListener("click", e => {
+  if (e.target === e.currentTarget) e.currentTarget.close();
+});
+$("goal-dialog").addEventListener("close", () => term.focus());
+$("explain-open").addEventListener("click", () => showGoal(state.current, false));
+
+// クリアしたことのある問題には、解説を読み返すボタンを出す。
+// 問題を選ぶ前の画面（使い方）のボタン。まだクリアしていない最初の問題から始める。
+function firstUncleared() {
+  for (let n = 1; n <= QUIZZES.length; n++) if (!state.cleared.has(n)) return n;
+  return 1;
+}
+function renderOnboarding() {
+  const button = $("onboarding-start");
+  button.disabled = !state.ready;
+  if (!state.ready) return;
+  const n = firstUncleared();
+  button.textContent = state.cleared.size && state.cleared.size < QUIZZES.length ? `続きから始める（問題${n}）` : "問題1 から始める";
+}
+$("onboarding-start").addEventListener("click", () => startQuiz(firstUncleared()));
+
+function renderExplainButton() {
+  $("explain-open").hidden = !state.current || !state.cleared.has(state.current);
 }
 
 // 文章を要素に入れる。`…` で囲んだ部分はコードとして表示する。
@@ -232,11 +266,23 @@ function renderChat(quiz) {
 
 // ---- 画面 ----
 
+// .git エクスプローラーは、最初はたたんでおく。まずはターミナルで調べてもらうため。
+let explorerOpen = false;
+$("explorer-toggle").addEventListener("click", () => {
+  explorerOpen = !explorerOpen;
+  $("explorer").classList.toggle("collapsed", !explorerOpen);
+  const button = $("explorer-toggle");
+  button.textContent = explorerOpen ? "たたむ" : "開く";
+  button.setAttribute("aria-expanded", String(explorerOpen));
+  if (explorerOpen && state.ready) Explorer.refresh(state.current);
+});
+
 // 問題を始める（やり直すときも同じ）。VMには quiz <番号> を送るが、その入力や準備中の表示は画面に出さず、
 // 準備が終わってから、その問題のディレクトリにいるプロンプトだけを見せる。
 function startQuiz(n) {
   if (!state.ready || muted) return;
   muted = true;
+  startSeen = false;
   held = [];
   setStatus(`問題${n} を準備しています…`);
   // Ctrl-U で入力途中の行を消してから送る。
@@ -272,7 +318,7 @@ function renderList() {
 }
 
 function renderPanel() {
-  renderExplain();
+  renderExplainButton();
   const quiz = QUIZZES[state.current - 1];
   $("terminal-title").textContent = quiz ? `bash — ~/q${state.current}` : "bash";
   $("panel").classList.toggle("started", Boolean(quiz));
@@ -306,7 +352,8 @@ $("clear-progress").addEventListener("click", () => {
   state.cleared.clear();
   saveCleared();
   renderList();
-  renderExplain();
+  renderExplainButton();
+  renderOnboarding();
 });
 
 renderList();
