@@ -16,7 +16,7 @@ const QUIZ_COUNT = 10;
 const MEMORY_SIZE = 256 * 1024 * 1024;
 const VGA_MEMORY_SIZE = 2 * 1024 * 1024;
 const ROWS = 34;
-const COLS = 120;
+const COLS = 110;
 
 const emulator = new V86({
     wasm_path: path.join(ROOT, "node_modules/v86/build/v86.wasm"),

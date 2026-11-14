@@ -4,7 +4,7 @@
 const MEMORY_SIZE = 256 * 1024 * 1024;
 const VGA_MEMORY_SIZE = 2 * 1024 * 1024;
 const ROWS = 34;
-const COLS = 120;
+const COLS = 110;
 const STORAGE_KEY = "fix-broken-git-quiz:cleared";
 
 const $ = id => document.getElementById(id);
@@ -168,6 +168,8 @@ function onStart(n) {
   if ($("goal-dialog").open) $("goal-dialog").close();
   renderPanel();
   renderList();
+  // 問題文を最初から読めるよう、ページの最上部に戻す。
+  window.scrollTo(0, 0);
 }
 
 function onGoal(n) {
@@ -296,17 +298,26 @@ const SPEAKERS = { k: { name: "後輩", mark: "後" }, s: { name: "先輩（あ�
 function renderChat(quiz) {
   $("panel-chat-messages").replaceChildren(...quiz.chat.map(([who, text], i) => {
     const li = document.createElement("li");
-    li.className = `chat-message ${who === "s" ? "senpai" : "kohai"}`;
-    const avatar = Object.assign(document.createElement("span"), { className: "chat-avatar", textContent: SPEAKERS[who].mark });
-    avatar.setAttribute("aria-hidden", "true");
+    const time = `10:${String(12 + i).padStart(2, "0")}`;
     const body = document.createElement("div");
-    const head = document.createElement("div");
-    head.className = "chat-head";
-    head.append(
-      Object.assign(document.createElement("strong"), { textContent: SPEAKERS[who].name }),
-      Object.assign(document.createElement("span"), { className: "chat-time", textContent: `10:${String(12 + i).padStart(2, "0")}` }));
-    body.append(head, rich(document.createElement("p"), text));
-    li.append(avatar, body);
+    // 同じ人が続けて発言したときは、Slack と同じくアイコンと名前を省く。
+    const continued = i > 0 && quiz.chat[i - 1][0] === who;
+    li.className = `chat-message ${who === "s" ? "senpai" : "kohai"}${continued ? " continued" : ""}`;
+    if (continued) {
+      li.append(Object.assign(document.createElement("span"), { className: "chat-gutter", textContent: time }));
+    } else {
+      const avatar = Object.assign(document.createElement("span"), { className: "chat-avatar", textContent: SPEAKERS[who].mark });
+      avatar.setAttribute("aria-hidden", "true");
+      const head = document.createElement("div");
+      head.className = "chat-head";
+      head.append(
+        Object.assign(document.createElement("strong"), { textContent: SPEAKERS[who].name }),
+        Object.assign(document.createElement("span"), { className: "chat-time", textContent: time }));
+      li.append(avatar);
+      body.append(head);
+    }
+    body.append(rich(document.createElement("p"), text));
+    li.append(body);
     return li;
   }));
   $("panel-chat").hidden = false;
@@ -387,8 +398,7 @@ function renderPanel() {
     const details = document.createElement("details");
     const summary = document.createElement("summary");
     summary.textContent = i === quiz.hints.length - 1 ? heading : `ヒント${i + 1}：${heading}`;
-    const p = document.createElement("p");
-    p.textContent = text;
+    const p = rich(document.createElement("p"), text);
     details.append(summary, p);
     if (command) {
       const pre = document.createElement("pre");

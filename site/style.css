@@ -52,7 +52,7 @@ code, pre {
 code { background: var(--code-bg); border-radius: 4px; padding: 0.1em 0.35em; }
 h1, h2 { line-height: 1.35; margin: 0; }
 
-.site-header { padding: 14px 24px 4px; max-width: 1800px; margin: 0 auto; }
+.site-header { padding: 14px 24px 4px; max-width: 2200px; margin: 0 auto; }
 .site-header h1 { font-size: 1.2rem; }
 .site-header p { margin: 2px 0 0; color: var(--muted); font-size: 0.88rem; }
 
@@ -69,7 +69,7 @@ h1, h2 { line-height: 1.35; margin: 0; }
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  max-width: 1800px;
+  max-width: 2200px;
   margin: 0 auto;
   padding: 6px 24px;
 }
@@ -116,7 +116,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
   cursor: pointer;
 }
 
-.main { max-width: 1800px; margin: 0 auto; padding: 12px 24px 40px; }
+.main { max-width: 2200px; margin: 0 auto; padding: 12px 24px 40px; }
 
 /* 問題文は枠で囲まず、ページの地にそのまま置く。 */
 .panel { padding: 8px 2px 4px; }
@@ -179,40 +179,74 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 .first { margin-top: 8px; }
 
 /* ---- 問題が起きた場面の会話 ---- */
+/* Slack の標準の見た目（白地、太字の名前、灰色の時刻、赤いコード）に寄せる。 */
 .chat {
+  --chat-bg: #ffffff;
+  --chat-text: #1d1c1d;
+  --chat-muted: #616061;
+  --chat-line: rgba(29, 28, 29, 0.13);
+  --chat-hover: #f8f8f8;
+  --chat-code: #e01e5a;
+  --chat-code-bg: rgba(29, 28, 29, 0.04);
   margin-top: 8px;
-  border-radius: 10px;
-  background: var(--surface);
-  box-shadow: var(--card-shadow);
+  border: 1px solid var(--chat-line);
+  border-radius: 8px;
+  background: var(--chat-bg);
+  color: var(--chat-text);
+  font-family: Lato, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", Meiryo, system-ui, sans-serif;
   overflow: hidden;
+}
+@media (prefers-color-scheme: dark) {
+  .chat {
+    --chat-bg: #1a1d21;
+    --chat-text: #d1d2d3;
+    --chat-muted: #ababad;
+    --chat-line: rgba(232, 232, 232, 0.13);
+    --chat-hover: #222529;
+    --chat-code: #e8912d;
+    --chat-code-bg: rgba(232, 232, 232, 0.04);
+  }
 }
 .chat[hidden] { display: none; }
 .chat-channel {
-  padding: 6px 12px 0;
-  color: var(--muted);
-  font-size: 0.75rem;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--chat-line);
+  font-size: 0.95rem;
   font-weight: 700;
 }
-.chat-messages { list-style: none; margin: 0; padding: 3px 0 6px; font-size: 0.85rem; }
-.chat-message { display: flex; gap: 8px; padding: 3px 12px; }
-.chat-message:hover { background: var(--bg); }
+.chat-messages { list-style: none; margin: 0; padding: 8px 0; font-size: 0.9375rem; }
+.chat-message { display: flex; gap: 8px; padding: 4px 16px; }
+.chat-message:hover { background: var(--chat-hover); }
 .chat-avatar {
   flex: none;
-  width: 24px;
-  height: 24px;
-  margin-top: 2px;
-  border-radius: 5px;
-  background: var(--commit-soft);
-  color: var(--commit);
-  font-size: 0.75rem;
+  width: 36px;
+  height: 36px;
+  margin-top: 3px;
+  border-radius: 6px;
+  background: #2bac76;
+  color: #fff;
+  font-size: 0.95rem;
   font-weight: 700;
-  line-height: 24px;
+  line-height: 36px;
   text-align: center;
 }
-.senpai .chat-avatar { background: var(--accent-soft); color: var(--accent); }
-.chat-head { display: flex; align-items: baseline; gap: 6px; line-height: 1.3; }
-.chat-time { color: var(--muted); font-size: 0.7rem; }
-.panel .chat-message p { margin: 0; line-height: 1.5; }
+.senpai .chat-avatar { background: #1264a3; }
+.chat-head { display: flex; align-items: baseline; gap: 8px; line-height: 1.4; }
+.chat-head strong { font-weight: 700; }
+.chat-time { color: var(--chat-muted); font-size: 0.75rem; }
+/* 同じ人の続けての発言は、アイコンと名前を省き、時刻だけを左の余白に出す（マウスを載せたとき）。 */
+.chat-message.continued { padding-top: 2px; }
+.chat-gutter { flex: none; width: 36px; color: var(--chat-muted); font-size: 0.7rem; line-height: 1.47rem; text-align: right; visibility: hidden; }
+.chat-message:hover .chat-gutter { visibility: visible; }
+.panel .chat-message p { margin: 0; line-height: 1.47; }
+.chat code {
+  padding: 2px 3px 1px;
+  border: 1px solid var(--chat-line);
+  border-radius: 3px;
+  background: var(--chat-code-bg);
+  color: var(--chat-code);
+  font-size: 0.8rem;
+}
 .panel .situation { margin-top: 6px; }
 .situation[hidden] { display: none; }
 .hints { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
@@ -226,6 +260,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 }
 .hints details[open] { flex-basis: 100%; border-radius: 10px; padding: 8px 14px; }
 .hints summary { cursor: pointer; color: var(--accent); }
+.hints a { color: var(--accent); text-underline-offset: 2px; }
 .hints pre {
   margin: 8px 0 4px;
   padding: 8px 10px;
@@ -436,7 +471,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 .explorer.collapsed .explorer-closed-note { display: block; }
 .explorer.collapsed .explorer-content, .explorer.collapsed .explorer-nav, .explorer.collapsed .explorer-root { display: none; }
 .explorer-lead { margin: 4px 0 10px; color: var(--muted); font-size: 0.85rem; }
-.explorer-body { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 14px; }
+.explorer-body { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 12px; }
 .explorer-tree, .explorer-detail {
   height: 432px;
   overflow: auto;
@@ -446,6 +481,17 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 .explorer-tree:empty { display: none; }
 .explorer-tree:empty + .explorer-detail { grid-column: 1 / -1; height: auto; }
 .explorer-detail { padding: 12px 16px; font-size: 0.9rem; }
+/* 参照元に戻るボタン。スクロールしても上端に残る。 */
+.explorer-return {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: -12px -16px 10px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--accent-soft);
+  font-size: 0.85rem;
+}
 .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.92em; }
 
 .tree { list-style: none; margin: 0; padding: 6px 0; }
@@ -531,7 +577,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 .chain li { padding: 2px 0; }
 
 /* .git エクスプローラーの幅が狭いときは、一覧を上、中身を下に積む。 */
-@container (max-width: 640px) {
+@container (max-width: 580px) {
   .explorer-body { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .explorer-tree { height: 150px; }
   .explorer-detail { height: 272px; }
@@ -542,7 +588,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
   /* 幅があるときは、状況設定を左、会話を右に置く。狭いときは会話が先。 */
   .panel.started .panel-chat-col { order: 2; }
 }
-@media (min-width: 1560px) {
+@media (min-width: 1480px) {
   .workspace { grid-template-columns: max-content minmax(0, 1fr); align-items: start; }
 }
 @media (max-width: 700px) {

@@ -691,16 +691,44 @@ const Explorer = (() => {
     return items;
   }
 
-  function renderTree() {
+  // reveal が真なら、選んでいるファイルが一覧の見える範囲に入るようにスクロールする。
+  function renderTree(reveal = false) {
     const box = $("explorer-tree");
     const top = box.scrollTop;
     box.replaceChildren(el("ul", { class: "tree" }, treeItems(model.tree, 0, selectedRel())));
     box.scrollTop = top;
+    const current = reveal && box.querySelector(".tree-item.current");
+    if (!current) return;
+    // ページ全体は動かさず、一覧の中だけをスクロールする。見えていなければ中央あたりに出す。
+    const item = current.getBoundingClientRect();
+    const view = box.getBoundingClientRect();
+    if (item.top < view.top || item.bottom > view.bottom) {
+      box.scrollTop += item.top - view.top - (box.clientHeight - item.height) / 2;
+    }
   }
 
   // ---- 全体の描画と操作 ----
 
-  async function render(keepScroll = false) {
+  // 画面の名前。「◯◯ に戻る」の表示に使う。
+  function selectionLabel(sel) {
+    if (sel.kind === "file") return sel.rel;
+    if (sel.kind === "object") {
+      const object = model.objects.get(sel.hash);
+      return `${object ? object.type : "オブジェクト"} ${short(sel.hash)}`;
+    }
+    return "参照のつながり";
+  }
+
+  // 1つ前の画面（リンクを押した参照元）に、見ていた位置ごと戻る。
+  function back() {
+    if (!history.length) return;
+    const from = history.pop();
+    selection = from.selection;
+    render(false, from.top);
+  }
+
+  // keepScroll は同じ画面を描き直すとき、restoreTop は前の画面に戻るときに、スクロール位置を保つ。
+  async function render(keepScroll = false, restoreTop = 0) {
     const detail = $("explorer-detail");
     $("explorer-back").disabled = history.length === 0;
     $("explorer-overview").disabled = !model;
@@ -710,20 +738,26 @@ const Explorer = (() => {
       detail.replaceChildren(el("p", { class: "empty" }, quiz ? `~/q${quiz} がありません。` : "問題を始めると、リポジトリの中身（.git の中）がここに表示されます。"));
       return;
     }
-    renderTree();
+    renderTree(!keepScroll);
     const mine = seq;
     const top = detail.scrollTop;
     const nodes = selection.kind === "file" ? await viewFile(selection.rel)
       : selection.kind === "object" ? viewObject(selection.hash)
       : viewOverview();
     if (mine !== seq) return;
-    detail.replaceChildren(...nodes);
-    detail.scrollTop = keepScroll ? top : 0;
+    // リンクをたどって来た画面では、参照元に戻るボタンを上端に出す。スクロールしても上端に残る。
+    const from = history[history.length - 1];
+    const bar = from && el("div", { class: "explorer-return" },
+      el("button", { type: "button", class: "x-link", onclick: back }, `← ${selectionLabel(from.selection)} に戻る`));
+    detail.replaceChildren(...[bar, ...nodes].filter(Boolean));
+    detail.scrollTop = keepScroll ? top : restoreTop;
   }
 
   function go(next) {
     if (!model) return;
-    history.push(selection);
+    // いま見ている画面をもう一度選んだときは、戻り先を増やさない。
+    if (JSON.stringify(next) === JSON.stringify(selection)) return;
+    history.push({ selection, top: $("explorer-detail").scrollTop });
     selection = next;
     // 選んだファイルが一覧で見えるよう、途中のディレクトリを開く。
     const rel = selectedRel();
@@ -768,11 +802,7 @@ const Explorer = (() => {
 
   function attach(v86) {
     emulator = v86;
-    $("explorer-back").addEventListener("click", () => {
-      if (!history.length) return;
-      selection = history.pop();
-      render();
-    });
+    $("explorer-back").addEventListener("click", back);
     $("explorer-overview").addEventListener("click", () => go({ kind: "overview" }));
     render();
   }
