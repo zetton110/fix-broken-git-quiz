@@ -35,7 +35,7 @@ const term = new Terminal({
   fontSize: 14,
   fontFamily: 'ui-monospace, "SF Mono", Menlo, Consolas, "Noto Sans Mono CJK JP", "MS Gothic", monospace',
   cursorBlink: true,
-  theme: { background: "#14171c", foreground: "#e4e7eb" },
+  theme: { background: "#1a2638", foreground: "#e4e9ef" },
 });
 term.open($("terminal"));
 

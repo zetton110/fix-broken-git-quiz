@@ -1,16 +1,18 @@
 :root {
-  --bg: #f6f7f9;
+  /* 青みのある淡い地に白いカード、明るい青のアクセント（Zenn の雰囲気を参考にした配色）。 */
+  --bg: #edf2f7;
   --surface: #ffffff;
-  --text: #1c2128;
-  --muted: #5b6471;
-  --border: #d9dde3;
-  --accent: #0b6bcb;
-  --accent-soft: #e6f0fb;
+  --text: #24292f;
+  --muted: #65717b;
+  --border: #d6e3ed;
+  --accent: #0c74dd;       /* リンクや文字に使う青 */
+  --primary: #0f83fd;      /* ボタンや印の塗りに使う青 */
+  --accent-soft: #e0efff;
   --ok: #1a7f37;
   --ok-soft: #e3f5e8;
-  --code-bg: #eef0f3;
-  --terminal: #14171c;
-  --card-shadow: 0 1px 3px rgba(20, 30, 45, 0.1);
+  --code-bg: #e4ecf4;
+  --terminal: #1a2638;
+  --card-shadow: 0 2px 4px rgba(33, 37, 58, 0.06);
   --bad: #b3261e;
   --bad-soft: #fbe9e7;
   --commit: #8a5a00;
@@ -21,16 +23,17 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --card-shadow: none;
-    --bg: #0f1216;
-    --surface: #181c22;
-    --text: #e4e7eb;
-    --muted: #9aa4b1;
-    --border: #2c333c;
-    --accent: #6cb0f5;
-    --accent-soft: #1b2b3d;
+    --bg: #0d1420;
+    --surface: #17202e;
+    --text: #e4e9ef;
+    --muted: #96a3b3;
+    --border: #2a3648;
+    --accent: #6cb8ff;
+    --primary: #3ea8ff;
+    --accent-soft: #162c47;
     --ok: #56c271;
     --ok-soft: #173021;
-    --code-bg: #232931;
+    --code-bg: #222e40;
     --bad: #ff938a;
     --bad-soft: #3a1d1b;
     --commit: #e3b341;
@@ -43,7 +46,8 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 15px/1.7 system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+  font: 15px/1.8 -apple-system, "system-ui", "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", Meiryo, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 code, pre {
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -52,8 +56,8 @@ code, pre {
 code { background: var(--code-bg); border-radius: 4px; padding: 0.1em 0.35em; }
 h1, h2 { line-height: 1.35; margin: 0; }
 
-.site-header { padding: 14px 24px 4px; max-width: 2200px; margin: 0 auto; }
-.site-header h1 { font-size: 1.2rem; }
+.site-header { padding: 14px 24px 6px; background: var(--surface); }
+.site-header h1 { font-size: 1.25rem; letter-spacing: 0.01em; }
 .site-header p { margin: 2px 0 0; color: var(--muted); font-size: 0.88rem; }
 
 /* 問題の一覧：番号だけを横に並べた細い帯。スクロールしても上に残る。 */
@@ -61,7 +65,7 @@ h1, h2 { line-height: 1.35; margin: 0; }
   position: sticky;
   top: 0;
   z-index: 20;
-  background: var(--bg);
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
 .quiz-nav-inner {
@@ -94,7 +98,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
   height: 28px;
   border-radius: 50%;
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--bg);
   font-size: 0.8rem;
   line-height: 26px;
   text-align: center;
@@ -102,7 +106,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
   font-variant-numeric: tabular-nums;
 }
 .quiz-item:hover .mark { border-color: var(--accent); color: var(--accent); }
-.quiz-item[aria-current="true"] .mark { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; box-shadow: 0 0 0 2px var(--accent); }
+.quiz-item[aria-current="true"] .mark { border-color: var(--primary); background: var(--accent-soft); color: var(--accent); font-weight: 700; box-shadow: 0 0 0 2px var(--primary); }
 .cleared .mark, .cleared:hover .mark { background: var(--ok); border-color: var(--ok); color: var(--surface); font-weight: 700; }
 .link-button {
   margin-left: auto;
@@ -116,11 +120,11 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
   cursor: pointer;
 }
 
-.main { max-width: 2200px; margin: 0 auto; padding: 12px 24px 40px; }
+.main { max-width: 2200px; margin: 0 auto; padding: 20px 24px 48px; }
 
 /* 問題文は枠で囲まず、ページの地にそのまま置く。 */
 .panel { padding: 8px 2px 4px; }
-.panel h2 { font-size: 1.3rem; }
+.panel h2 { font-size: 1.45rem; letter-spacing: 0.01em; }
 .panel-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 40px; }
 .panel-heading { margin: 16px 0 0; color: var(--muted); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; }
 .panel:not(.started) .panel-heading { display: none; }
@@ -143,8 +147,8 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 .onboarding-steps li {
   display: flex;
   gap: 10px;
-  padding: 12px 14px;
-  border-radius: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
   background: var(--surface);
   box-shadow: var(--card-shadow);
 }
@@ -153,8 +157,8 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: var(--accent);
-  color: var(--surface);
+  background: var(--primary);
+  color: #fff;
   font-weight: 700;
   line-height: 26px;
   text-align: center;
@@ -166,15 +170,17 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 .onboarding-tips strong { color: var(--text); }
 .onboarding-start {
   margin-top: 14px;
-  padding: 8px 20px;
-  border: 1px solid var(--accent);
-  border-radius: 7px;
-  background: var(--accent);
-  color: var(--surface);
+  padding: 9px 28px;
+  border: 0;
+  border-radius: 99rem;
+  background: var(--primary);
+  color: #fff;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  transition: filter 0.15s;
 }
+.onboarding-start:hover:not(:disabled) { filter: brightness(0.93); }
 .onboarding-start:disabled { opacity: 0.55; cursor: default; }
 .first { margin-top: 8px; }
 
@@ -258,7 +264,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
   padding: 5px 14px;
   font-size: 0.9rem;
 }
-.hints details[open] { flex-basis: 100%; border-radius: 10px; padding: 8px 14px; }
+.hints details[open] { flex-basis: 100%; border-radius: 14px; padding: 10px 16px; }
 .hints summary { cursor: pointer; color: var(--accent); }
 .hints a { color: var(--accent); text-underline-offset: 2px; }
 .hints pre {
@@ -273,9 +279,9 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 /* ---- クリア済みの問題で、解説を読み返すボタン ---- */
 .explain-open {
   margin-top: 12px;
-  padding: 5px 12px;
+  padding: 5px 16px;
   border: 1px solid var(--ok);
-  border-radius: 7px;
+  border-radius: 99rem;
   background: var(--ok-soft);
   color: var(--ok);
   font: inherit;
@@ -291,7 +297,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
   max-height: calc(100vh - 48px);
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--surface);
   color: var(--text);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
@@ -364,24 +370,24 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
   border-top: 1px solid var(--border);
 }
 .goal-actions button {
-  padding: 7px 16px;
-  border-radius: 7px;
+  padding: 8px 22px;
+  border-radius: 99rem;
   font: inherit;
   font-weight: 600;
   cursor: pointer;
 }
 .goal-actions button[hidden] { display: none; }
 .goal-close { border: 1px solid var(--border); background: var(--surface); color: var(--text); }
-.goal-next { border: 1px solid var(--ok); background: var(--ok); color: var(--surface); }
+.goal-next { border: 1px solid var(--primary); background: var(--primary); color: #fff; }
 
 /* ターミナルと.git エクスプローラー。幅があれば横に並べる。 */
 .workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 18px; }
 .terminal-col { min-width: 0; }
 .terminal-window {
-  border: 1px solid #2b3038;
-  border-radius: 10px;
+  border: 1px solid #101826;
+  border-radius: 14px;
   background: var(--terminal);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 8px 24px rgba(26, 38, 56, 0.2);
   overflow: hidden;
 }
 .terminal-bar {
@@ -390,8 +396,8 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
   align-items: center;
   height: 30px;
   padding: 0 12px;
-  background: #2a2e36;
-  border-bottom: 1px solid #1b1e24;
+  background: #26354d;
+  border-bottom: 1px solid #142033;
 }
 .terminal-dots { display: flex; gap: 7px; }
 .terminal-dots i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; }
@@ -432,7 +438,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
   min-width: 0;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 14px;
   padding: 14px 16px 16px;
 }
 /* たたんでいるあいだは枠を出さず、＋ボタンと見出しだけにする。 */
