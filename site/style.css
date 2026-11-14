@@ -15,6 +15,8 @@
   --bad-soft: #fbe9e7;
   --commit: #8a5a00;
   --commit-soft: #fbf0d6;
+  /* スクロールバーなどブラウザの部品も、明るい・暗い配色に合わせる。 */
+  color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -101,7 +103,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 }
 .quiz-item:hover .mark { border-color: var(--accent); color: var(--accent); }
 .quiz-item[aria-current="true"] .mark { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; box-shadow: 0 0 0 2px var(--accent); }
-.cleared .mark, .cleared:hover .mark { background: var(--ok); border-color: var(--ok); color: #fff; font-weight: 700; }
+.cleared .mark, .cleared:hover .mark { background: var(--ok); border-color: var(--ok); color: var(--surface); font-weight: 700; }
 .link-button {
   margin-left: auto;
   padding: 0;
@@ -277,7 +279,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
   height: 32px;
   border-radius: 50%;
   background: var(--ok);
-  color: #fff;
+  color: var(--surface);
   font-weight: 700;
   line-height: 32px;
   text-align: center;
@@ -301,7 +303,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 }
 .goal-actions button[hidden] { display: none; }
 .goal-close { border: 1px solid var(--border); background: var(--surface); color: var(--text); }
-.goal-next { border: 1px solid var(--ok); background: var(--ok); color: #fff; }
+.goal-next { border: 1px solid var(--ok); background: var(--ok); color: var(--surface); }
 
 /* ターミナルと.git エクスプローラー。幅があれば横に並べる。 */
 .workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 18px; }
