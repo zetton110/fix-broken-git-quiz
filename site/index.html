@@ -42,12 +42,29 @@
       <div id="terminal"></div>
     </div>
     <p class="note"><code>quiz check</code> で未クリアの理由を表示、<code>quiz &lt;番号&gt;</code> で問題をやり直せます。エディタは <code>nano</code> が使えます。</p>
+
+    <section class="explorer" aria-labelledby="explorer-title">
+      <div class="explorer-head">
+        <h2 id="explorer-title">リポジトリの中身 <span id="explorer-root" class="explorer-root"></span></h2>
+        <div class="explorer-actions">
+          <button id="explorer-back" type="button" disabled>← 戻る</button>
+          <button id="explorer-overview" type="button" disabled>参照のつながり</button>
+        </div>
+      </div>
+      <p class="explorer-lead">ファイル名やハッシュ値をクリックすると、<code>.git</code> の中をたどれます。コマンドを実行するたびに、最新の状態に更新されます。</p>
+      <div class="explorer-body">
+        <div id="explorer-tree" class="explorer-tree"></div>
+        <div id="explorer-detail" class="explorer-detail"></div>
+      </div>
+    </section>
   </main>
 </div>
 
 <script src="vendor/xterm.js"></script>
 <script src="vendor/libv86.js"></script>
+<script src="vendor/pako_inflate.js"></script>
 <script src="quizzes.js"></script>
+<script src="explorer.js"></script>
 <script src="main.js"></script>
 </body>
 </html>

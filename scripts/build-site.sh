@@ -14,6 +14,7 @@ cp -R "$ROOT/site/." "$DIST/"
 cp -R "$ROOT/build/images" "$ROOT/build/bios" "$DIST/"
 cp "$ROOT/node_modules/v86/build/libv86.js" "$ROOT/node_modules/v86/build/v86.wasm" "$DIST/vendor/"
 cp "$ROOT/node_modules/@xterm/xterm/lib/xterm.js" "$ROOT/node_modules/@xterm/xterm/css/xterm.css" "$DIST/vendor/"
+cp "$ROOT/node_modules/pako/dist/pako_inflate.min.js" "$DIST/vendor/pako_inflate.js"
 touch "$DIST/.nojekyll"
 
 echo "作成: $DIST ($(du -sh "$DIST" | cut -f1))"

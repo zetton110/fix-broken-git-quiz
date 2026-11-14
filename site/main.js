@@ -67,6 +67,8 @@ const emulator = new V86({
   disable_speaker: true,
 });
 
+Explorer.attach(emulator);
+
 // VMの出力は1バイトずつ届く。日本語（UTF-8）が途中で切れないよう、バイト列のまま渡す。
 let outBuffer = [];
 emulator.add_listener("serial0-output-byte", byte => {
@@ -127,6 +129,8 @@ function onPrompt(current, done) {
     renderList();
   }
   if (current && done && !state.cleared.has(current)) markCleared(current);
+  // プロンプトが出るたび（コマンドを1つ実行するたび）に、リポジトリの中身の表示を更新する。
+  Explorer.refresh(current);
 }
 
 function onStart(n) {

@@ -23,7 +23,8 @@ claude.ai のセッションで途中まで作り、続きをローカルで進�
 | VMイメージ | `vm/Dockerfile`、`scripts/build-image.sh` | 作成済み、ローカルでビルド済み |
 | 起動済み状態 | `scripts/build-state.mjs` | 作成済み、VM内で10問を解いてから保存する |
 | Webページ | `site/`、`scripts/build-site.sh` | 作成済み、ローカルのブラウザで確認済み |
-| デプロイ | `.github/workflows/deploy.yml` | 作成済み、GitHub 上では未実行 |
+| リポジトリの中身の表示 | `site/explorer.js` | 作成済み、ローカルのブラウザで10問とも確認済み（未デプロイ） |
+| デプロイ | `.github/workflows/deploy.yml` | GitHub Actions でビルドとデプロイに成功（2026-11-14） |
 
 ## ビルドと確認の手順
 
@@ -77,6 +78,16 @@ VM内の bash が `/root/.bash_profile` 経由で `quiz.sh` を読み込みま�
 ページ側は xterm.js の `term.parser.registerOscHandler(777, handler)` で受け取る想定です。
 `prompt` の通知は、VMの準備完了の検知と、ページ側の状態の同期に使えます。
 
+## リポジトリの中身の表示
+
+ターミナルの下に、いまの問題のリポジトリ（`~/q<番号>`）の中身をクリックでたどれる画面があります（`site/explorer.js`）。
+
+- VMのルートは 9p なので、v86 が持つファイルシステムをページ側から直接読む（`emulator.fs9p.read_dir`、`SearchPath`、`GetInode`、`emulator.read_file`）。シリアルポートは使わない
+- `git` コマンドは使わず、`.git` の中のファイルをページ側で解釈する。壊れたリポジトリでも表示できるようにするため
+- loose オブジェクトと packfile は pako（`vendor/pako_inflate.js`）で展開する。packfile は `.idx` を使わず先頭から順に読む
+- `quiz;prompt` の通知が来るたび（コマンドを1つ実行するたび）に全体を読み直す。前回から変わったファイルには「更新」の印を付ける
+- 表示するもの：ファイルの一覧、HEAD からたどった参照のつながり、index の中身、オブジェクト（commit、tree、blob）の中身、そのオブジェクトを指しているもの
+
 ## 実装メモ
 
 - v86 の変換ツールと BIOS は、npm の `v86@0.5.473` と同じ版（コミット `315b2b0b758703ef0e6cc7b4088d6068f83f3c20`）の v86 リポジトリを `.cache/v86` に取得して使う
@@ -88,9 +99,8 @@ VM内の bash が `/root/.bash_profile` 経由で `quiz.sh` を読み込みま�
 
 ## 残りの作業
 
-- 最初のコミットと push（まだ1つもコミットしていない）
-- リポジトリの Settings の Pages で、Source を「GitHub Actions」にする
-- GitHub Actions でのビルドとデプロイの確認
+- リポジトリの中身の表示（`site/explorer.js`）のコミットと push
+- GitHub Actions の各アクションが Node.js 20 向けで、非推奨の警告が出ている（動作には影響なし）
 
 ## 確かめたことと、確かめていないこと
 
@@ -102,11 +112,13 @@ VM内の bash が `/root/.bash_profile` 経由で `quiz.sh` を読み込みま�
 - 起動済み状態は約26MB、`dist/` 全体で約74MB
 - ブラウザで、問題の選択、キー入力、ゴール表示、クリア状況の表示が動く
 - 各問題の「最初に試すコマンド」とヒントのコマンドが、説明どおりの出力になる
+- GitHub Actions でのビルドとデプロイが成功し、公開ページで問題9をゴールまで解ける
+- リポジトリの中身の表示が、10問とも壊れた箇所を示す（空の HEAD、空の参照、読めない index、壊れたオブジェクト、索引のない packfile）
+- 問題9を解くと、作られた `.idx` が一覧に「更新」の印付きで現れる
 
 確かめていないこと：
 
-- GitHub Actions 上でのビルド（Ubuntu の Docker で i386 のイメージを作れること）
-- GitHub Pages 上での初回表示にかかる時間
+- リポジトリの中身の表示の、幅の広い画面（2列の配置）とダークモードでの見た目
 - Chrome 系以外のブラウザと、スマートフォンでの動作
 - `nano` の画面表示
 
