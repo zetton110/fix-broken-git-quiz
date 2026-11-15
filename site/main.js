@@ -203,6 +203,8 @@ function showGoal(n, justCleared) {
     startQuiz(next);
   };
   if (!dialog.open) dialog.showModal();
+  // 閉じているあいだはスクロール位置を変えられないので、開いてから先頭に戻す。
+  document.querySelector(".goal-body").scrollTop = 0;
 }
 
 $("goal-close").addEventListener("click", () => $("goal-dialog").close());
@@ -271,7 +273,6 @@ function renderExplain(explain) {
     ...figure,
     el("h3", "", "くわしく"), details,
     el("h3", "", "Pro Git で読む"), refs);
-  document.querySelector(".goal-body").scrollTop = 0;
 }
 
 // Pro Git 日本語版の該当箇所へのリンク。別のタブで開く。
