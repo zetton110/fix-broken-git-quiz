@@ -4,6 +4,7 @@
 // chat は問題を始めたときに見せる会話。[話し手, 発言] の並びで、話し手は k が後輩、s が先輩（解く人）。
 // situation は会話の下に載せる状況設定。
 // explain はクリアしたあとに表示する解説。points は最初に見せる要点（[見出し, 文]）、details はくわしい説明（[見出し, 段落]）。
+// map は解説に載せる図の指定（diagram.js を参照）。point は図の下に添える説明。
 // 文の中では、`…` で囲んだ部分をコードとして、[表示する文字](LINKS のキー) を Pro Git へのリンクとして表示する。
 
 // Pro Git 日本語版（https://git-scm.com/book/ja/v2）の、用語やファイルを説明している箇所。[ページ#見出し, 一覧に出す名前]
@@ -46,6 +47,7 @@ const QUIZZES = [
       ["解答例", "ロックファイルを削除します。", "rm .git/index.lock"],
     ],
     explain: {
+      map: { broken: "lock", note: ["残っているだけなので", "削除する"], notePos: "below", point: "`index.lock` は index を書き換えているあいだだけ置かれる合図です。壊れたデータではないので、控えを探す必要はありません。ほかに Git が動いていないことを確かめて、`rm .git/index.lock` で削除します。" },
       points: [
         ["原因", "コミットの途中で Git が強制終了され、ロックファイル `.git/index.lock` が残っていました。"],
         ["直し方", "ほかに Git が動いていないことを確かめてから、`rm .git/index.lock` で削除します。"],
@@ -74,6 +76,7 @@ const QUIZZES = [
       ["解答例", "nano .git/config で1行目を [core] に直します。sed でも直せます。", "sed -i.bak '1s/.*/[core]/' .git/config"],
     ],
     explain: {
+      map: { broken: "config", note: ["書式どおりに", "書き直す"], point: "`config` は書式の決まったテキストファイルなので、控えがなくても書き直せます。1行目をセクションの見出し `[core]` に直します。" },
       points: [
         ["原因", "`.git/config` の1行目が壊れ、[設定ファイル](config)として読めなくなっていました。"],
         ["直し方", "1行目を、セクションの見出し `[core]` に書き直します。"],
@@ -102,6 +105,7 @@ const QUIZZES = [
       ["解答例", "core.bare を false に戻します。", "git config core.bare false"],
     ],
     explain: {
+      map: { broken: "config", note: ["bare = false に", "戻す"], point: "ファイルが壊れたのではなく、`core.bare` の値が変わっていました。`git config core.bare false` で元に戻します。" },
       points: [
         ["原因", "`.git/config` の `core.bare` が `true` になり、Git がこのリポジトリを[ベアリポジトリ](bare)として扱っていました。"],
         ["直し方", "`git config core.bare false` で元に戻します。"],
@@ -130,6 +134,7 @@ const QUIZZES = [
       ["解答例", "HEAD に main ブランチへの参照を書き戻します。", "echo 'ref: refs/heads/main' > .git/HEAD"],
     ],
     explain: {
+      map: { broken: "head", note: ["書式どおりに", "書き直す"], point: "`HEAD` はブランチ名を1行書いただけのテキストファイルなので、控えがなくても書き直せます。`echo 'ref: refs/heads/main' > .git/HEAD` を実行します。" },
       points: [
         ["原因", "`.git/HEAD` が空になり、Git が `.git` をリポジトリと認めなくなっていました。"],
         ["直し方", "`echo 'ref: refs/heads/main' > .git/HEAD` で、ブランチを指す1行を書き直します。"],
@@ -158,6 +163,7 @@ const QUIZZES = [
       ["解答例", "壊れた index を消し、HEAD のコミットから[作り直します](reset)。", "rm .git/index\ngit reset"],
     ],
     explain: {
+      map: { broken: "index", edges: [["tree", "index", "git reset"]], point: "index は、`HEAD` のコミットが指す tree から作り直せます。`rm .git/index` で壊れたファイルを消し、`git reset` で作り直します。" },
       points: [
         ["原因", "`.git/index` が壊れ、[index](index)（次のコミットに含める内容の一覧）を読めなくなっていました。"],
         ["直し方", "`rm .git/index` で削除し、すぐに `git reset` で作り直します。"],
@@ -187,6 +193,7 @@ const QUIZZES = [
       ["解答例", "最新のコミットのハッシュ値を書き戻します。", "echo 434dcb3f0533968183d0d695054f100fefc42291 > .git/refs/heads/main"],
     ],
     explain: {
+      map: { broken: "ref", edges: [["reflog", "ref", "最後の行の右側の値"]], point: "ブランチの位置の控えは reflog にあります。`tail -n 1 .git/logs/refs/heads/main` で最後の行を表示し、左から2番目のハッシュ値を `.git/refs/heads/main` に書き込みます。" },
       points: [
         ["原因", "ブランチのファイル `.git/refs/heads/main` が空になり、`main` がどのコミットも指さなくなっていました。"],
         ["直し方", "[reflog](reflog)（`.git/logs/refs/heads/main`）か `git fsck` で最新のコミットのハッシュ値を調べ、`.git/refs/heads/main` に書き込みます。"],
@@ -216,6 +223,7 @@ const QUIZZES = [
       ["解答例", "壊れたオブジェクトを消し、作業ツリーの app.py から blob を書き直します。", "rm -f .git/objects/55/bcbcbb235a2c04bd28b2e4f1b8d24db7266db9\ngit hash-object -w app.py"],
     ],
     explain: {
+      map: { broken: "blob", edges: [["worktree", "blob", "git hash-object -w"]], point: "blob の名前は内容だけから決まるので、同じ内容のファイルがあれば同じ blob を作れます。壊れたファイルを `rm` で消し、`git hash-object -w app.py` で作業ツリーの `app.py` から書き込み直します。" },
       points: [
         ["原因", "`app.py` の内容を保存した [blob オブジェクト](objects)（`55bcbcb…`）が、展開できないデータで上書きされていました。"],
         ["直し方", "壊れたファイルを `rm` で削除してから、`git hash-object -w app.py` で同じ内容を書き込み直します。"],
@@ -246,6 +254,7 @@ const QUIZZES = [
       ["解答例", "壊れたオブジェクトを消し、index から tree を書き直します。", "rm -f .git/objects/1e/5269c3584df32d65860cd27c8cd9c5f1965be9\ngit write-tree"],
     ],
     explain: {
+      map: { broken: "tree", edges: [["index", "tree", "git write-tree"]], point: "tree のもとになるデータは index です。壊れたファイルを `rm` で消し、`git write-tree` で index から tree を作り直します。" },
       points: [
         ["原因", "最新のコミットが指す [tree オブジェクト](tree)（`1e5269c…`）が壊れていました。"],
         ["直し方", "壊れたファイルを `rm` で削除してから、`git write-tree` で index から tree を作り直します。"],
@@ -275,6 +284,7 @@ const QUIZZES = [
       ["解答例", ".pack から .idx を作り直します。", "git index-pack .git/objects/pack/pack-*.pack"],
     ],
     explain: {
+      map: { broken: "idx", edges: [["pack", "idx", "git index-pack"]], point: "`.idx` は `.pack` の中身から計算できる派生データです。`git index-pack .git/objects/pack/pack-*.pack` で作り直します。" },
       points: [
         ["原因", "[packfile](packfile) の索引（`.idx`）が消え、`.pack` の中のオブジェクトを探せなくなっていました。"],
         ["直し方", "`git index-pack .git/objects/pack/pack-*.pack` で、`.pack` から `.idx` を作り直します。"],
@@ -304,6 +314,7 @@ const QUIZZES = [
       ["解答例", "壊れたオブジェクトを消し、同じ材料で[コミットを作り直します](env-commit)。", "rm -f .git/objects/43/4dcb3f0533968183d0d695054f100fefc42291\nGIT_AUTHOR_NAME=\"Taro\" GIT_AUTHOR_EMAIL=\"taro@example.com\" GIT_AUTHOR_DATE=\"1793494800 +0900\" GIT_COMMITTER_NAME=\"Taro\" GIT_COMMITTER_EMAIL=\"taro@example.com\" GIT_COMMITTER_DATE=\"1793494800 +0900\" git commit-tree 1e5269c3584df32d65860cd27c8cd9c5f1965be9 -p 3b37e793f7b72fef74d619390a41ee7ee6c4c644 -m \"bye を追加\""],
     ],
     explain: {
+      map: { broken: "commit", edges: [["reflog", "commit", "親、作者、日時、メッセージ", [100, 349, "middle"]], ["index", "commit", "tree", [548, 249, "start"]]], point: "コミットの中身は、tree、親、作者、日時、メッセージの5つです。tree は index から `git write-tree` で求め、残りは reflog の最後の行から読み取ります。全項目を元と同じにして `git commit-tree` を実行すると、同じハッシュ値のコミットが戻ります。" },
       points: [
         ["原因", "最新の[コミットオブジェクト](commit)（`434dcb3…`）が壊れていました。"],
         ["直し方", "壊れたファイルを `rm` で削除してから、tree・親コミット・作者・日時・メッセージを元と同じにして、`git commit-tree` でコミットを作り直します。"],

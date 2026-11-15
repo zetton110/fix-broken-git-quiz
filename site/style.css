@@ -351,6 +351,30 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 }
 .explain-points dt { color: var(--accent); font-weight: 700; white-space: nowrap; }
 .explain-points dd { margin: 0; }
+/* 図：.git の中のつながりと、原因の場所、直すときに使う関係 */
+.explain-map { margin: 0; }
+.explain-map-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
+.recovery-map { display: block; width: 100%; min-width: 600px; height: auto; font-family: inherit; }
+.explain-map figcaption { margin-top: 8px; padding-left: 12px; border-left: 4px solid var(--bad); line-height: 1.75; font-size: 0.95rem; }
+.map-group { fill: var(--bg); stroke: var(--border); }
+.map-g { font-size: 11.5px; font-weight: 700; fill: var(--muted); }
+.map-box { fill: var(--surface); stroke: var(--muted); stroke-width: 1.2; }
+.map-broken { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 2.4; }
+.map-t { font-size: 13px; font-weight: 700; fill: var(--text); }
+.map-s { font-size: 11px; fill: var(--muted); }
+.map-tag { fill: var(--bad); }
+.map-tag-text { font-size: 10.5px; font-weight: 700; fill: var(--surface); }
+.map-arrow line { fill: none; }
+.map-ref line { stroke: var(--muted); stroke-width: 1.5; }
+.map-ref polygon { fill: var(--muted); }
+.map-fix line { stroke: var(--accent); stroke-width: 1.8; stroke-dasharray: 6 4; }
+.map-fix polygon { fill: var(--accent); }
+.map-key line { stroke: var(--bad); stroke-width: 3; }
+.map-key polygon { fill: var(--bad); }
+.map-dim { opacity: 0.35; }
+.map-label { font-size: 11.5px; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.map-label-ref { fill: var(--muted); }
+.map-label-key { fill: var(--bad); font-weight: 700; }
 /* くわしい説明：見出しで何の話かを先に示す */
 .explain-details section + section { margin-top: 12px; }
 .explain-details h4 { margin: 0; font-size: 0.95rem; }

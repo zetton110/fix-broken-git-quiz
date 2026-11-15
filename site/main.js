@@ -233,7 +233,7 @@ function renderExplainButton() {
 }
 
 // 解説を組み立てる。最初に要点（原因・直し方・覚えておくこと）、次に見出しつきのくわしい説明、
-// 最後に、文中でリンクした Pro Git の箇所の一覧を並べる。
+// 最後に、文中でリンクした Pro Git の箇所の一覧を並べる。要点の次には、原因の場所と直し方を示す図を置く。
 function renderExplain(explain) {
   const el = (tag, className, text) => {
     const node = document.createElement(tag);
@@ -256,8 +256,19 @@ function renderExplain(explain) {
     li.append(bookLink(key, LINKS[key][1]));
     refs.append(li);
   }
+  const figure = [];
+  if (explain.map) {
+    const fig = el("figure", "explain-map");
+    const scroll = el("div", "explain-map-scroll");
+    const svg = RecoveryMap.render(explain.map);
+    svg.setAttribute("aria-label", ".git の中のつながりと、この問題で原因になった場所、直すときに使った関係の図");
+    scroll.append(svg);
+    fig.append(scroll, rich(el("figcaption"), explain.map.point));
+    figure.push(el("h3", "", "図で見る"), fig);
+  }
   $("explain-body").replaceChildren(
     el("h3", "", "ポイント"), points,
+    ...figure,
     el("h3", "", "くわしく"), details,
     el("h3", "", "Pro Git で読む"), refs);
   document.querySelector(".goal-body").scrollTop = 0;
