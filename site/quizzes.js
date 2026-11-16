@@ -73,7 +73,7 @@ const QUIZZES = [
     hints: [
       ["調べ方", "エラーが指している[設定ファイル](config)の1行目を見てみましょう。", "cat .git/config"],
       ["原因", "セクションの見出しは [core] のように角括弧で閉じる必要があります。閉じ括弧が欠けています。"],
-      ["解答例", "nano .git/config で1行目を [core] に直します。sed でも直せます。", "sed -i.bak '1s/.*/[core]/' .git/config"],
+      ["解答例", "vi .git/config で1行目を [core] に直します。sed でも直せます。", "sed -i.bak '1s/.*/[core]/' .git/config"],
     ],
     explain: {
       map: { broken: "config", note: ["書式どおりに", "書き直す"], point: "`config` は書式の決まったテキストファイルなので、控えがなくても書き直せます。1行目をセクションの見出し `[core]` に直します。" },

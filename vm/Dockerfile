@@ -2,7 +2,7 @@
 FROM docker.io/i386/alpine:3.21.0
 
 ENV KERNEL=virt
-ENV ADDPKGS="bash git nano less file"
+ENV ADDPKGS="bash git less file"
 
 RUN apk add openrc alpine-base agetty alpine-conf linux-$KERNEL linux-firmware-none $ADDPKGS
 
