@@ -182,7 +182,7 @@ body:not(.ready) .quiz-item { opacity: 0.55; cursor: progress; }
 }
 .onboarding-start:hover:not(:disabled) { filter: brightness(0.93); }
 .onboarding-start:disabled { opacity: 0.55; cursor: default; }
-.first { margin-top: 8px; }
+.first { margin-top: 12px; }
 
 /* ---- 問題が起きた場面の会話 ---- */
 /* Slack の標準の見た目（白地、太字の名前、灰色の時刻、赤いコード）に寄せる。 */
