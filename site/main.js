@@ -104,6 +104,7 @@ function flushOutput() {
     }
     bytes = held.slice(end);
     held = [];
+    setPreparing(0);
     setStatus("");
     term.write("\x1b[2J\x1b[3J\x1b[H");
   }
@@ -121,13 +122,13 @@ term.onData(data => {
 emulator.add_listener("download-progress", e => {
   if (state.ready) return;
   const percent = e.lengthComputable && e.total ? ` ${Math.floor((e.loaded / e.total) * 100)}%` : "";
-  setStatus(`読み込んでいます…${percent}`);
+  setStatus(`読み込んでいます…${percent}`, false, true);
 });
 emulator.add_listener("download-error", () => {
   setStatus("読み込みに失敗しました。ページを再読み込みしてください。", true);
 });
 emulator.add_listener("emulator-ready", () => {
-  setStatus("起動しています…");
+  setStatus("起動しています…", false, true);
   // 保存しておいた状態はプロンプトで止まっている。改行を送って prompt 通知を出させ、準備完了を知る。
   // 状態の復元の直後に送った入力は届かないことがあるので、通知が来るまで送り直す。
   const ping = setInterval(() => {
@@ -136,11 +137,23 @@ emulator.add_listener("emulator-ready", () => {
   }, 300);
 });
 
-function setStatus(text, isError = false) {
+// busy を true にすると、文の前に回転する印を出して、待っていることを示す。
+function setStatus(text, isError = false, busy = false) {
   const el = $("status");
   el.textContent = text;
   el.classList.toggle("error", isError);
+  el.classList.toggle("busy", busy);
   el.hidden = text === "";
+}
+
+// 問題を準備しているあいだ（quiz コマンドを送ってからプロンプトが出るまで）は、
+// 押したボタンと問題の番号に読み込み中の印を出す。0 で終わり。
+let preparing = 0;
+function setPreparing(n) {
+  preparing = n;
+  document.body.classList.toggle("preparing", n !== 0);
+  renderOnboarding();
+  renderList();
 }
 
 // ---- VMからの通知 ----
@@ -223,7 +236,12 @@ function firstUncleared() {
 }
 function renderOnboarding() {
   const button = $("onboarding-start");
-  button.disabled = !state.ready;
+  button.disabled = !state.ready || preparing !== 0;
+  button.classList.toggle("busy", preparing !== 0);
+  if (preparing) {
+    button.textContent = `問題${preparing} を準備しています…`;
+    return;
+  }
   if (!state.ready) return;
   const n = firstUncleared();
   button.textContent = state.cleared.size && state.cleared.size < QUIZZES.length ? `続きから始める（問題${n}）` : "問題1 から始める";
@@ -359,7 +377,8 @@ function startQuiz(n) {
   muted = true;
   startSeen = false;
   held = [];
-  setStatus(`問題${n} を準備しています…`);
+  setPreparing(n);
+  setStatus(`問題${n} を準備しています…`, false, true);
   // Ctrl-U で入力途中の行を消してから送る。
   send(`\x15quiz ${n}\n`);
   term.focus();
@@ -379,6 +398,7 @@ function renderList() {
     const cleared = state.cleared.has(n);
     mark.textContent = cleared ? "✓" : String(n);
     if (cleared) button.classList.add("cleared");
+    if (n === preparing) button.classList.add("preparing");
     // 一覧には番号だけを出す。タイトルはマウスを載せると出る。
     const label = `問題${n}：${quiz.title}${cleared ? "（クリア済み）" : ""}`;
     button.title = label;
