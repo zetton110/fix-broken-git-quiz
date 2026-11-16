@@ -2,7 +2,7 @@
 // map を渡すと、その問題で原因になった場所と、直すときに使う関係を赤で目立たせる。
 //   map.broken … 原因の場所（NODES のキー）
 //   map.edges  … 直すときに使う関係の配列。[材料, 作り直すもの, ラベル, ラベルの位置（省略可）]
-//   map.note   … 原因の場所のそばに書く短い説明（行の配列）。map.notePos が "below" なら箱の下に書く
+//   map.note   … 原因の場所の右に書く短い説明（行の配列）
 const RecoveryMap = (() => {
   const W = 180, H = 52;
   const NODES = {
@@ -17,8 +17,6 @@ const RecoveryMap = (() => {
     worktree: { x: 570, y: 378, t: "作業ツリー", s: "app.py（編集中のファイル）" },
     pack: { x: 295, y: 478, t: "pack-….pack", s: "オブジェクトの本体" },
     idx: { x: 570, y: 478, t: "pack-….idx", s: "オブジェクトの位置の索引" },
-    // index.lock は、原因になった問題でだけ描く。
-    lock: { x: 570, y: 178, t: ".git/index.lock", s: "index を書き換え中の合図", optional: true },
   };
   // Git が現在のコミットとファイルにたどり着くまでに読む順番。
   const REFS = [["head", "ref", "ブランチ名"], ["ref", "commit", "ハッシュ値"], ["commit", "tree"], ["tree", "blob"]];
@@ -92,7 +90,6 @@ const RecoveryMap = (() => {
     }
 
     for (const [key, n] of Object.entries(NODES)) {
-      if (n.optional && !(map && map.broken === key)) continue;
       const broken = map && map.broken === key;
       svg.append(
         svgEl("rect", { x: n.x, y: n.y, width: W, height: H, rx: 7, class: broken ? "map-box map-broken" : "map-box" }),
@@ -103,11 +100,9 @@ const RecoveryMap = (() => {
         svgEl("rect", { x: n.x + 8, y: n.y - 10, width: 62, height: 19, rx: 9.5, class: "map-tag" }),
         svgEl("text", { x: n.x + 39, y: n.y + 3.5, "text-anchor": "middle", class: "map-tag-text" }, "原因の場所"));
       (map.note || []).forEach((line, i) => {
-        const below = map.notePos === "below";
         svg.append(svgEl("text", {
-          x: below ? n.x + W / 2 : n.x + W + 12,
-          y: below ? n.y + H + 18 + i * 16 : n.y + H / 2 - (map.note.length - 1) * 8 + 4 + i * 16,
-          "text-anchor": below ? "middle" : "start",
+          x: n.x + W + 12,
+          y: n.y + H / 2 - (map.note.length - 1) * 8 + 4 + i * 16,
           class: "map-label map-label-key",
         }, line));
       });

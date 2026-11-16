@@ -47,7 +47,6 @@ const QUIZZES = [
       ["解答例", "ロックファイルを削除します。", "rm .git/index.lock"],
     ],
     explain: {
-      map: { broken: "lock", note: ["残っているだけなので", "削除する"], notePos: "below", point: "`index.lock` は index を書き換えているあいだだけ置かれる合図です。壊れたデータではないので、控えを探す必要はありません。ほかに Git が動いていないことを確かめて、`rm .git/index.lock` で削除します。" },
       points: [
         ["原因", "コミットの途中で Git が強制終了され、ロックファイル `.git/index.lock` が残っていました。"],
         ["直し方", "ほかに Git が動いていないことを確かめてから、`rm .git/index.lock` で削除します。"],
