@@ -68,18 +68,24 @@ h1, h2 { line-height: 1.35; margin: 0; }
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
+/* 狭い画面でも折り返さず1行に保ち、入りきらない分は横にスクロールする。 */
 .quiz-nav-inner {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   max-width: 2200px;
   margin: 0 auto;
   padding: 6px 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
 }
+.quiz-nav-inner::-webkit-scrollbar { display: none; }
+.quiz-nav-inner > * { flex: none; }
 .quiz-nav-label { font-size: 0.85rem; font-weight: 700; }
 .progress { color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
-.quiz-list { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.quiz-list { display: flex; flex-wrap: nowrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
 .quiz-item {
   position: relative;
   display: block;
