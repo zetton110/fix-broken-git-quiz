@@ -115,6 +115,8 @@ console.log(`コマンド1つと判定にかかった時間の最大: ${slowest}
 const reset = await run("quiz reset");
 if (!reset.seen.includes("prompt;0;0")) fail(`quiz reset 後の状態が想定と違います（通知: ${reset.seen.join(", ")}）`);
 await run("cd; history -c; sync; echo 3 > /proc/sys/vm/drop_caches");
+// 空いているメモリには、使い終わったデータが残っていて圧縮が効きにくい。保存の前に一度0で埋めてから解放する。
+await run("mkdir -p /tmp/zero && mount -t tmpfs -o size=1g tmpfs /tmp/zero && dd if=/dev/zero of=/tmp/zero/fill bs=1M count=$(awk '/MemAvailable/ { print int($2 / 1024) - 8 }' /proc/meminfo) 2>/dev/null; rm -f /tmp/zero/fill; umount /tmp/zero; rmdir /tmp/zero; echo 3 > /proc/sys/vm/drop_caches");
 await run("clear");
 await new Promise(resolve => setTimeout(resolve, 5000));
 
