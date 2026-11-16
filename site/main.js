@@ -36,15 +36,21 @@ const term = new Terminal({
   fontFamily: 'ui-monospace, "SF Mono", Menlo, Consolas, "Noto Sans Mono CJK JP", "MS Gothic", monospace',
   cursorBlink: true,
   theme: { background: "#1a2638", foreground: "#e4e9ef" },
+  // VM の中のプログラムが出したリンク（OSC 8）は開かない。問題ではリンクを使わないので、
+  // 見た目だけのリンクで別のサイトへ誘導されないようにする。
+  linkHandler: { activate() {} },
 });
 term.open($("terminal"));
 
+// VM からの通知。VM の中では利用者が何でも出力できるので、問題番号は範囲を確かめてから使う。
 term.parser.registerOscHandler(777, data => {
   const [tag, kind, a, b] = data.split(";");
   if (tag !== "quiz") return false;
-  if (kind === "start") onStart(Number(a));
-  else if (kind === "goal") onGoal(Number(a));
-  else if (kind === "prompt") onPrompt(Number(a), b === "1");
+  const n = /^\d{1,2}$/.test(a) ? Number(a) : -1;
+  const isQuiz = n >= 1 && n <= QUIZZES.length;
+  if (kind === "start" && isQuiz) onStart(n);
+  else if (kind === "goal" && isQuiz) onGoal(n);
+  else if (kind === "prompt" && (n === 0 || isQuiz)) onPrompt(n, b === "1");
   return true;
 });
 
