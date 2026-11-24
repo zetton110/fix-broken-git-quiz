@@ -121,8 +121,16 @@ const encoder = new TextEncoder();
 function send(text) {
   emulator.serial_send_bytes(0, encoder.encode(text));
 }
-term.onData(data => {
+function sendInput(data) {
   if (state.ready && state.current && !muted) send(data);
+}
+term.onData(sendInput);
+
+// Esc キーがブラウザや拡張機能、日本語入力に取られてターミナルに届かない環境がある。
+// vi の挿入モードから抜けられなくなるので、クリックで Esc を送れるようにする。
+$("send-esc").addEventListener("click", () => {
+  sendInput("\x1b");
+  term.focus();
 });
 
 emulator.add_listener("download-progress", e => {

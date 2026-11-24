@@ -478,6 +478,20 @@ body.preparing .panel-body { opacity: 0.45; }
   text-align: center;
   pointer-events: none;
 }
+/* Esc キーをブラウザや拡張機能に取られる環境のために、クリックで Esc を送るボタンを置く。 */
+.terminal-key {
+  position: relative;
+  margin-left: auto;
+  padding: 1px 10px;
+  border: 1px solid #4a5b77;
+  border-radius: 5px;
+  background: #33435e;
+  color: #e4e9ef;
+  font: 0.75rem ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  cursor: pointer;
+}
+.terminal-key:hover { background: #40526f; }
+.terminal-key:focus-visible { outline: 2px solid #8fc0ff; outline-offset: 1px; }
 .terminal-frame {
   position: relative;
   padding: 8px 10px 10px;

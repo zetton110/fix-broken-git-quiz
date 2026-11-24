@@ -65,16 +65,17 @@
   <div class="workspace">
     <div class="terminal-col">
       <div class="terminal-window">
-        <div class="terminal-bar" aria-hidden="true">
-          <span class="terminal-dots"><i></i><i></i><i></i></span>
-          <span id="terminal-title" class="terminal-title">bash</span>
+        <div class="terminal-bar">
+          <span class="terminal-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span id="terminal-title" class="terminal-title" aria-hidden="true">bash</span>
+          <button id="send-esc" class="terminal-key" type="button" title="ターミナルに Esc キーを送る">Esc</button>
         </div>
         <div class="terminal-frame">
           <div id="status" class="status">読み込んでいます…</div>
           <div id="terminal"></div>
         </div>
       </div>
-      <p class="note">エディタは <code>vi</code> が使えます。<code>quiz check</code> で未クリアの理由を表示できます。やり直すときは、上の番号をもう一度クリックします。</p>
+      <p class="note">エディタは <code>vi</code> が使えます。Esc キーが効かないときは、ターミナル右上の Esc ボタンか <kbd>Ctrl</kbd>+<kbd>[</kbd> を使います。<code>quiz check</code> で未クリアの理由を表示できます。やり直すときは、上の番号をもう一度クリックします。</p>
     </div>
 
     <section id="explorer" class="explorer collapsed" aria-labelledby="explorer-title">
