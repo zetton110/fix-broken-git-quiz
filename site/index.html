@@ -13,7 +13,6 @@
 <body>
 <header class="site-header">
   <h1>壊れたGitリポジトリを手で直す問題集</h1>
-  <p>壊れたリポジトリを直すと、自動でゴール判定されます。</p>
 </header>
 
 <nav class="quiz-nav" aria-label="問題の一覧">
@@ -27,7 +26,10 @@
 
 <main class="main">
   <section id="panel" class="panel" aria-live="polite">
-    <h2 id="panel-title">使い方</h2>
+    <div class="panel-head">
+      <h2 id="panel-title">使い方</h2>
+      <button id="panel-toggle" class="panel-toggle" type="button" aria-expanded="true" aria-controls="panel-chat-col panel-situation">▲ チャットと状況設定をたたむ</button>
+    </div>
     <div id="onboarding" class="onboarding">
       <p class="onboarding-lead"><span>あなたは先輩エンジニアです。</span><span>後輩から「Git が壊れました」と相談が来るので、</span><span>預かったリポジトリを調べて直してください。</span><span>全部で10問あります。</span></p>
       <ol class="onboarding-steps">
@@ -44,15 +46,18 @@
       <button id="onboarding-start" class="onboarding-start" type="button" disabled>読み込んでいます…</button>
     </div>
     <div class="panel-body">
-      <div class="panel-chat-col">
-        <h3 class="panel-heading">今朝のチャット通知</h3>
+      <div id="panel-chat-col" class="panel-chat-col">
+        <h3 class="panel-heading">今朝のチャット通知<span id="chat-loading" class="chat-loading" role="status"></span><button id="intro-skip" class="intro-skip" type="button">会話をスキップして問題へ進む →</button></h3>
         <div id="panel-chat" class="chat" hidden>
           <div class="chat-channel"># dev-help</div>
           <ol id="panel-chat-messages" class="chat-messages"></ol>
+          <!-- 導入のあいだだけ出す。先輩の返信が届くまでの「入力中」の印と、導入の残り時間を示す帯。 -->
+          <div id="chat-typing" class="chat-typing" hidden><span class="chat-typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>先輩（あなた）が入力中…</div>
+          <div id="chat-progress" class="chat-progress" aria-hidden="true"></div>
         </div>
       </div>
       <div class="panel-text">
-        <h3 class="panel-heading">状況設定</h3>
+        <h3 class="panel-heading situation-heading">状況設定</h3>
         <p id="panel-situation" class="situation" hidden></p>
         <p id="panel-symptom"></p>
         <div id="panel-hints" class="hints"></div>

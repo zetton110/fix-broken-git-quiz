@@ -6,13 +6,15 @@ const VGA_MEMORY_SIZE = 2 * 1024 * 1024;
 const ROWS = 34;
 const COLS = 110;
 const STORAGE_KEY = "fix-broken-git-quiz:cleared";
+// 会話を読んだことのある問題の番号。初めての問題だけ、会話を読む時間を長く取るのに使う。
+const SEEN_KEY = "fix-broken-git-quiz:seen";
 
 const $ = id => document.getElementById(id);
-const state = { ready: false, current: 0, cleared: loadCleared() };
+const state = { ready: false, current: 0, cleared: loadNumbers(STORAGE_KEY), seen: loadNumbers(SEEN_KEY) };
 
-function loadCleared() {
+function loadNumbers(key) {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    const saved = JSON.parse(localStorage.getItem(key) || "[]");
     return new Set(saved.filter(n => Number.isInteger(n) && n >= 1 && n <= QUIZZES.length));
   } catch {
     return new Set();
@@ -22,6 +24,7 @@ function loadCleared() {
 function saveCleared() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...state.cleared]));
+    localStorage.setItem(SEEN_KEY, JSON.stringify([...state.seen]));
   } catch {
     // 保存できなくても、このページを開いているあいだは動く。
   }
@@ -41,6 +44,14 @@ const term = new Terminal({
   linkHandler: { activate() {} },
 });
 term.open($("terminal"));
+
+// ターミナルの窓の幅を CSS に伝える。問題文の会話を、同じ幅にそろえるため。
+function syncTerminalWidth() {
+  document.querySelector(".main").style.setProperty("--terminal-width", `${document.querySelector(".terminal-window").offsetWidth}px`);
+}
+syncTerminalWidth();
+new ResizeObserver(syncTerminalWidth).observe(document.querySelector(".terminal-window"));
+window.addEventListener("resize", syncTerminalWidth);
 
 // VM からの通知。VM の中では利用者が何でも出力できるので、問題番号は範囲を確かめてから使う。
 term.parser.registerOscHandler(777, data => {
@@ -112,6 +123,7 @@ function flushOutput() {
     held = [];
     setPreparing(0);
     setStatus("");
+    endIntroIfDone();
     term.write("\x1b[2J\x1b[3J\x1b[H");
   }
   term.write(new Uint8Array(bytes));
@@ -240,7 +252,7 @@ $("goal-dialog").addEventListener("click", e => {
   if (e.target === e.currentTarget) e.currentTarget.close();
 });
 $("goal-dialog").addEventListener("close", () => term.focus());
-$("explain-open").addEventListener("click", () => showGoal(state.current, false));
+$("explain-open").addEventListener("click", () => showGoal(introQuiz || state.current, false));
 
 // クリアしたことのある問題には、解説を読み返すボタンを出す。
 // 問題を選ぶ前の画面（使い方）のボタン。まだクリアしていない最初の問題から始める。
@@ -263,7 +275,9 @@ function renderOnboarding() {
 $("onboarding-start").addEventListener("click", () => startQuiz(firstUncleared()));
 
 function renderExplainButton() {
-  $("explain-open").hidden = !state.current || !state.cleared.has(state.current);
+  // 問題文を先に出しているあいだは、出している問題（introQuiz）に合わせる。あとから出すと下のターミナルがずれるため。
+  const n = introQuiz || state.current;
+  $("explain-open").hidden = !n || !state.cleared.has(n);
 }
 
 // 解説を組み立てる。最初に要点（原因・直し方・覚えておくこと）、次に見出しつきのくわしい説明、
@@ -338,36 +352,179 @@ function rich(el, text, used) {
 }
 
 // 問題が起きた場面を、チャットの会話として表示する。
+// 1行に続ける文字数の上限。会話の欄と、状況設定の行の長さの上限（44文字）に、折り返さずに収まる長さにしてある。
+const CHAT_LINE_CHARS = 54;
+const SITUATION_LINE_CHARS = 42;
 const SPEAKERS = { k: { name: "後輩", mark: "後" }, s: { name: "先輩（あなた）", mark: "先" } };
+// 会話の i 番目の発言を、チャットの1行として作る。
+function chatItem(chat, i) {
+  const [who, text] = chat[i];
+  const li = document.createElement("li");
+  const time = `10:${String(12 + i).padStart(2, "0")}`;
+  const body = document.createElement("div");
+  // 同じ人が続けて発言したときは、Slack と同じくアイコンと名前を省く。
+  const continued = i > 0 && chat[i - 1][0] === who;
+  li.className = `chat-message ${who === "s" ? "senpai" : "kohai"}${continued ? " continued" : ""}`;
+  if (continued) {
+    li.append(Object.assign(document.createElement("span"), { className: "chat-gutter", textContent: time }));
+  } else {
+    const avatar = Object.assign(document.createElement("span"), { className: "chat-avatar", textContent: SPEAKERS[who].mark });
+    avatar.setAttribute("aria-hidden", "true");
+    const head = document.createElement("div");
+    head.className = "chat-head";
+    head.append(
+      Object.assign(document.createElement("strong"), { textContent: SPEAKERS[who].name }),
+      Object.assign(document.createElement("span"), { className: "chat-time", textContent: time }));
+    li.append(avatar);
+    body.append(head);
+  }
+  body.append(sentences(document.createElement("p"), text, CHAT_LINE_CHARS));
+  li.append(body);
+  return li;
+}
+// 文章を、文の切れ目で行を分けて要素に入れる。横に長く続くと読みにくいため。
+// 文の終わりは「。！？」で、続く「…」や絵文字、閉じかっこまでをその文に含める。
+// 短い文は1行ずつにせず、次の文と合わせて maxChars 文字に収まるあいだは同じ行に続ける。
+function lines(text, maxChars) {
+  const out = [];
+  const size = t => t.replace(/`/g, "").length;
+  for (const sentence of text.match(/[^。！？]+(?:[。！？]+[^\p{L}\p{N}\s`「（]*\s*|$)/gu) || [text]) {
+    const last = out[out.length - 1];
+    if (last !== undefined && size(last) + size(sentence) <= maxChars) out[out.length - 1] = last + sentence;
+    else out.push(sentence);
+  }
+  return out.map(line => line.trim());
+}
+function sentences(el, text, maxChars) {
+  for (const line of lines(text, maxChars)) el.append(rich(document.createElement("span"), line));
+  return el;
+}
 function renderChat(quiz) {
-  $("panel-chat-messages").replaceChildren(...quiz.chat.map(([who, text], i) => {
-    const li = document.createElement("li");
-    const time = `10:${String(12 + i).padStart(2, "0")}`;
-    const body = document.createElement("div");
-    // 同じ人が続けて発言したときは、Slack と同じくアイコンと名前を省く。
-    const continued = i > 0 && quiz.chat[i - 1][0] === who;
-    li.className = `chat-message ${who === "s" ? "senpai" : "kohai"}${continued ? " continued" : ""}`;
-    if (continued) {
-      li.append(Object.assign(document.createElement("span"), { className: "chat-gutter", textContent: time }));
-    } else {
-      const avatar = Object.assign(document.createElement("span"), { className: "chat-avatar", textContent: SPEAKERS[who].mark });
-      avatar.setAttribute("aria-hidden", "true");
-      const head = document.createElement("div");
-      head.className = "chat-head";
-      head.append(
-        Object.assign(document.createElement("strong"), { textContent: SPEAKERS[who].name }),
-        Object.assign(document.createElement("span"), { className: "chat-time", textContent: time }));
-      li.append(avatar);
-      body.append(head);
-    }
-    body.append(rich(document.createElement("p"), text));
-    li.append(body);
+  $("panel-chat-messages").replaceChildren(...quiz.chat.map((_, i) => {
+    const li = chatItem(quiz.chat, i);
+    // 導入のあいだは、まだ届いていない発言を隠しておく。
+    li.hidden = introQuiz !== 0 && i >= introShown;
     return li;
   }));
   $("panel-chat").hidden = false;
-  rich($("panel-situation"), quiz.situation);
+  sentences($("panel-situation"), quiz.situation, SITUATION_LINE_CHARS);
   $("panel-situation").hidden = false;
 }
+
+// ---- チャット通知と状況設定をたたむ ----
+
+// 読み終えたあとは、たたんでターミナルを上に寄せられる。別の問題を始めたら、また開く。
+function setPanelFolded(folded) {
+  $("panel").classList.toggle("folded", folded);
+  const button = $("panel-toggle");
+  button.textContent = folded ? "▼ チャットと状況設定を開く" : "▲ チャットと状況設定をたたむ";
+  button.setAttribute("aria-expanded", String(!folded));
+}
+$("panel-toggle").addEventListener("click", () => setPanelFolded(!$("panel").classList.contains("folded")));
+
+// ---- 問題を始めた直後の導入 ----
+
+// 別の問題を始めたら、VM の準備を待つあいだ、問題文の会話だけを先に見せる（body.intro）。
+// 会話は問題文の中のいつもの場所に出し、まず後輩の発言が届き、少しして先輩の返信が届く。
+// 返信を読む時間を置き、VM の準備も済んでいたら、会話は動かさずに残り（状況設定やターミナル）を見せる。
+// 初めて始める問題では、発言の長さに合わせて読む時間を取る。読んだことのある問題では短く済ませる。
+// VM の準備が済んだあとは、ボタンで待たずに進める。
+const SENPAI_DELAY_MS = 3000;
+const INTRO_LINGER_MS = 2000;
+// 読む時間の目安（1秒あたりの文字数）。全体に目を走らせられる程度の、短めの時間にしてある。
+const READ_CHARS_PER_SECOND = 45;
+function readMs(lines) {
+  const chars = lines.reduce((sum, [, text]) => sum + text.replace(/`/g, "").length, 0);
+  return 1000 + (chars / READ_CHARS_PER_SECOND) * 1000;
+}
+// introQuiz は導入を見せている問題の番号（0 は導入なし）。introShown は、会話のうち届いた発言の数。
+let introQuiz = 0;
+let introShown = 0;
+let introHold = false;
+let introTimers = [];
+let introProgress = null;
+function arrive(items) {
+  for (const li of items) {
+    li.hidden = false;
+    li.classList.add("arriving");
+  }
+}
+function arriveRest() {
+  $("chat-typing").hidden = true;
+  introShown = QUIZZES[introQuiz - 1].chat.length;
+  arrive([...$("panel-chat-messages").children].filter(li => li.hidden));
+}
+function startIntro(n) {
+  const { chat } = QUIZZES[n - 1];
+  // 最初の話し手（後輩）が続けて話したぶんまでを先に出す。
+  const split = chat.findIndex(([who]) => who !== chat[0][0]);
+  const first = split === -1 ? chat.length : split;
+  const firstTime = !state.seen.has(n) && !state.cleared.has(n);
+  const delay = first === chat.length ? 0 : firstTime ? Math.max(SENPAI_DELAY_MS, readMs(chat.slice(0, first))) : SENPAI_DELAY_MS;
+  const linger = firstTime ? Math.max(INTRO_LINGER_MS, readMs(chat.slice(delay ? first : 0))) : INTRO_LINGER_MS;
+  introTimers.forEach(clearTimeout);
+  setPanelFolded(false);
+  introQuiz = n;
+  introShown = first;
+  introHold = true;
+  $("chat-loading").textContent = `問題${n} を準備しています…`;
+  document.body.classList.remove("intro-ready", "panel-early");
+  document.body.classList.add("intro");
+  renderPanel();
+  // 問題文は最上部から読ませる。
+  window.scrollTo(0, 0);
+  arrive([...$("panel-chat-messages").children].filter(li => !li.hidden));
+  // まだ続きがあることを示す。返信が届くまでは「入力中」の印、導入が終わるまでは下端の帯。
+  $("chat-typing").hidden = delay === 0;
+  if (introProgress) introProgress.cancel();
+  introProgress = $("chat-progress").animate(
+    [{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }],
+    { duration: delay + linger, fill: "forwards" });
+  introTimers = [
+    setTimeout(arriveRest, delay),
+    setTimeout(() => {
+      introHold = false;
+      endIntroIfDone();
+    }, delay + linger),
+  ];
+}
+// クリア済みの問題を開くとき。VM の準備を待たずに問題文を差し替える（body.panel-early）。
+// 会話は最初から全部出し、読む時間も取らない。ターミナルには、準備が済むまで準備中の表示が重なっている。
+function showPanelEarly(n) {
+  introTimers.forEach(clearTimeout);
+  setPanelFolded(false);
+  $("chat-typing").hidden = true;
+  if (introProgress) introProgress.cancel();
+  introProgress = null;
+  introQuiz = n;
+  introShown = QUIZZES[n - 1].chat.length;
+  introHold = false;
+  document.body.classList.remove("intro", "intro-ready");
+  document.body.classList.add("panel-early");
+  renderPanel();
+  window.scrollTo(0, 0);
+}
+function endIntroIfDone() {
+  if (!introQuiz) return;
+  // VM の準備が済んだら、準備中の印の代わりに、待たずに進むボタンを出す。
+  document.body.classList.toggle("intro-ready", !muted && document.body.classList.contains("intro"));
+  if (introHold || muted) return;
+  state.seen.add(introQuiz);
+  saveCleared();
+  introQuiz = 0;
+  $("chat-typing").hidden = true;
+  if (introProgress) introProgress.cancel();
+  introProgress = null;
+  document.body.classList.remove("intro", "intro-ready", "panel-early");
+  renderPanel();
+}
+$("intro-skip").addEventListener("click", () => {
+  if (!introQuiz || muted) return;
+  introTimers.forEach(clearTimeout);
+  introHold = false;
+  endIntroIfDone();
+  term.focus();
+});
 
 // ---- 画面 ----
 
@@ -391,6 +548,9 @@ function startQuiz(n) {
   muted = true;
   startSeen = false;
   held = [];
+  // やり直し（同じ問題）のときは、会話をもう読んでいるので導入を挟まない。
+  // クリア済みの問題も会話は読ませない。問題文をすぐに出し、ターミナルだけを準備中の表示で待たせる。
+  if (n !== state.current) (state.cleared.has(n) ? showPanelEarly : startIntro)(n);
   setPreparing(n);
   setStatus(`問題${n} を準備しています…`, false, true);
   // Ctrl-U で入力途中の行を消してから送る。
@@ -428,11 +588,13 @@ function renderList() {
 
 function renderPanel() {
   renderExplainButton();
-  const quiz = QUIZZES[state.current - 1];
-  $("terminal-title").textContent = quiz ? `bash — ~/q${state.current}` : "bash";
+  // 導入のあいだは、VM が問題を用意し終える前から、始めようとしている問題の文を出す。
+  const n = introQuiz || state.current;
+  const quiz = QUIZZES[n - 1];
+  $("terminal-title").textContent = quiz ? `bash — ~/q${n}` : "bash";
   $("panel").classList.toggle("started", Boolean(quiz));
   if (!quiz) return;
-  $("panel-title").textContent = `問題${state.current}：${quiz.title}`;
+  $("panel-title").textContent = `問題${n}：${quiz.title}`;
   $("panel-situation").replaceChildren();
   renderChat(quiz);
   $("panel-symptom").textContent = quiz.symptom;
@@ -458,6 +620,7 @@ function renderPanel() {
 $("clear-progress").addEventListener("click", () => {
   if (!confirm("クリア状況を消して、最初の画面に戻りますか？")) return;
   state.cleared.clear();
+  state.seen.clear();
   saveCleared();
   // ページを読み込み直して、VMごと最初の状態（問題を選ぶ前の画面）に戻す。
   location.reload();

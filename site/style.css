@@ -58,7 +58,6 @@ h1, h2 { line-height: 1.35; margin: 0; }
 
 .site-header { padding: 14px 24px 6px; background: var(--surface); }
 .site-header h1 { font-size: 1.25rem; letter-spacing: 0.01em; }
-.site-header p { margin: 2px 0 0; color: var(--muted); font-size: 0.88rem; }
 
 /* 問題の一覧：番号だけを横に並べた細い帯。スクロールしても上に残る。 */
 .quiz-nav {
@@ -146,12 +145,33 @@ body.preparing .panel-body { opacity: 0.45; }
 .main { max-width: 2200px; margin: 0 auto; padding: 20px 24px 48px; }
 
 /* 問題文は枠で囲まず、ページの地にそのまま置く。 */
-.panel { padding: 8px 2px 4px; }
+/* 左右の余白は置かない。会話の枠の左右の端を、下のターミナルの窓とそろえるため。 */
+.panel { padding: 8px 0 4px; }
 .panel h2 { font-size: 1.45rem; letter-spacing: 0.01em; }
+/* 問題のタイトルの右に、チャット通知と状況設定をたたむボタンを置く。読み終えたあと、ターミナルを上に寄せられるようにするため。 */
+.panel-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 16px; }
+/* 何をするボタンかが分かるよう、記号だけにせず、向きを示す三角と文で書く。 */
+.panel-toggle {
+  padding: 3px 14px;
+  border: 1px solid var(--border);
+  border-radius: 99rem;
+  background: var(--surface);
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.panel-toggle:hover { border-color: var(--accent); background: var(--accent-soft); }
+.panel:not(.started) .panel-toggle { display: none; }
+/* 導入のあいだは見せないが、場所は取っておく。あとから出すと行の高さが変わり、下の会話が動くため。 */
+body.intro .panel-toggle { visibility: hidden; }
+/* たたんでいるあいだは、症状の1文とヒント、最初に試すコマンドだけを残す。 */
+.panel.folded .panel-chat-col, .panel.folded .situation, .panel.folded .situation-heading { display: none; }
 .panel-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 40px; }
 .panel-heading { margin: 16px 0 0; color: var(--muted); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; }
 .panel:not(.started) .panel-heading { display: none; }
-.panel-chat-col { min-width: 0; }
+/* 会話の幅は、下のターミナルの窓の幅（--terminal-width。main.js が測って入れる）にそろえる。 */
+.panel-chat-col { min-width: 0; max-width: var(--terminal-width, none); }
 .panel p { margin: 6px 0 0; }
 
 /* ---- 問題を選ぶ前の画面（使い方） ---- */
@@ -295,7 +315,97 @@ body.preparing .panel-body { opacity: 0.45; }
   color: var(--chat-code);
   font-size: 0.8rem;
 }
+
+/* ---- 問題を始めた直後の導入 ---- */
+/* VM の準備を待つあいだ（body.intro）は、問題文の会話だけをその場に見せ、ほかは場所を取ったまま隠す。
+   準備が済んだら、会話を動かさずに、残りを浮かび上がらせる。 */
+.panel-text, .workspace { transition: opacity 0.5s ease-out; }
+body.intro .panel-text, body.intro .workspace { opacity: 0; visibility: hidden; transition: none; }
+.chat-message[hidden] { display: none; }
+/* 通知が届いたことが分かるよう、発言を下から浮かび上がらせる。 */
+@keyframes notify-in { from { opacity: 0; transform: translateY(8px); } }
+.chat-message.arriving { animation: notify-in 0.3s ease-out; }
+/* 見出しの行は高さを決めておき、準備中の印やボタンを出し入れしても、下の会話の位置が動かないようにする。 */
+.panel-chat-col .panel-heading { display: flex; align-items: center; height: 1.5rem; }
+/* 導入のあいだ、まだ続きがあることを会話の欄の中で示す。
+   先輩の返信が届くまでは「入力中」の印を出し、欄の下端の帯が、残りが表示されるまでの時間を左から右へ進む。 */
+.chat { position: relative; }
+.chat-typing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* 発言の文の左端（余白16 + アイコン36 + 間隔8）にそろえる。 */
+  padding: 2px 16px 12px 60px;
+  color: var(--chat-muted);
+  font-size: 0.8rem;
+}
+.chat-typing[hidden], body:not(.intro) .chat-typing { display: none; }
+.chat-typing-dots { display: inline-flex; gap: 3px; }
+.chat-typing-dots i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: typing 1.2s ease-in-out infinite; }
+.chat-typing-dots i:nth-child(2) { animation-delay: 0.15s; }
+.chat-typing-dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing { 0%, 60%, 100% { opacity: 0.3; transform: none; } 30% { opacity: 1; transform: translateY(-3px); } }
+/* 帯は欄の下端に重ねて置き、出し入れしても欄の高さを変えない。進み具合は main.js が動かす。 */
+.chat-progress {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--primary);
+  transform-origin: left;
+  transform: scaleX(0);
+}
+body.intro .chat-progress { display: block; }
+@media (prefers-reduced-motion: reduce) {
+  .chat-typing-dots i { animation: none; opacity: 0.6; }
+}
+/* 準備中の印は見出しの行の右に出す。出していないあいだも場所は取っておき、行の高さ（会話の位置）を変えない。 */
+.chat-loading { display: inline-flex; align-items: center; margin-left: 14px; font-weight: 400; letter-spacing: 0; visibility: hidden; }
+body.intro .chat-loading { visibility: visible; }
+/* VM の準備が済んだら、準備中の印を、待たずに進むボタンに替える。どちらも同じ行に収め、行の高さを変えない。 */
+body.intro.intro-ready .chat-loading { display: none; }
+.intro-skip {
+  display: none;
+  margin-left: 14px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+body.intro.intro-ready .intro-skip { display: inline; }
+.chat-loading::before {
+  content: "";
+  flex: none;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.5em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+/* 問題文を先に出しているあいだ（導入と、クリア済みの問題を開いたとき）は、準備中でも問題文を薄くしない。 */
+body.preparing.intro .panel-body, body.preparing.panel-early .panel-body { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .panel-text, .workspace { transition: none; }
+  .chat-message.arriving { animation: none; }
+  .chat-loading::before { animation-duration: 2.4s; }
+}
+
 .panel .situation { margin-top: 6px; }
+/* 状況設定と会話は文ごとに行を分ける。状況設定は、幅のある画面でも1行が長くなりすぎないよう、行の長さに上限を置く。 */
+/* 折り返すときは文節の切れ目で折り、最後の行に数文字だけ残るのを避ける（対応しているブラウザのみ）。 */
+.situation span, .chat-message p span { display: block; word-break: auto-phrase; text-wrap: pretty; }
+#panel-symptom { word-break: auto-phrase; text-wrap: pretty; }
+.situation, #panel-symptom { max-width: 44em; }
 .situation[hidden] { display: none; }
 .hints { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .hints:empty { display: none; }
@@ -450,6 +560,9 @@ body.preparing .panel-body { opacity: 0.45; }
 .workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 18px; }
 .terminal-col { min-width: 0; }
 .terminal-window {
+  /* 窓は中身（文字の桁数）の幅にし、右に余白を引き伸ばさない。画面が狭いときは画面の幅まで。 */
+  width: fit-content;
+  max-width: 100%;
   border: 1px solid #101826;
   border-radius: 14px;
   background: var(--terminal);
@@ -512,6 +625,13 @@ body.preparing .panel-body { opacity: 0.45; }
   color: #c9d1d9;
 }
 .status[hidden] { display: none; }
+/* ターミナルの中身（xterm）はスクリプトの読み込みが済んでから描かれる。それまで窓が潰れて見えないよう、
+   同じ大きさ（110桁 × 34行）を先に確保しておく。桁数・行数・フォントは main.js の ROWS、COLS、Terminal の指定と揃えること。 */
+#terminal {
+  font: 14px ui-monospace, "SF Mono", Menlo, Consolas, "Noto Sans Mono CJK JP", "MS Gothic", monospace;
+  min-width: 110ch;
+  min-height: calc(34 * 16px);
+}
 .status.error { color: #ff938a; }
 .note { margin: 8px 2px 0; color: var(--muted); font-size: 0.85rem; }
 
@@ -519,13 +639,16 @@ body.preparing .panel-body { opacity: 0.45; }
 .explorer {
   container-type: inline-size;
   min-width: 0;
+  /* ターミナルの下に置くときは、ターミナルの窓と同じ幅にする。 */
+  max-width: var(--terminal-width, none);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 14px 16px 16px;
 }
 /* たたんでいるあいだは枠を出さず、＋ボタンと見出しだけにする。 */
-.explorer.collapsed { background: none; border-color: transparent; padding: 4px 2px; }
+/* 左の余白は置かず、＋ボタンの左端を、上の状況設定やターミナルの窓の左端にそろえる。 */
+.explorer.collapsed { background: none; border-color: transparent; padding: 4px 0; }
 .explorer-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .explorer-actions { margin-left: auto; }
 .explorer-toggle {
@@ -672,19 +795,19 @@ body.preparing .panel-body { opacity: 0.45; }
   .explorer-detail { height: 272px; }
 }
 
-@media (min-width: 1100px) {
-  .panel.started .panel-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
-  /* 幅があるときは、状況設定を左、会話を右に置く。狭いときは会話が先。 */
-  .panel.started .panel-chat-col { order: 2; }
-}
 @media (min-width: 1480px) {
-  .workspace { grid-template-columns: max-content minmax(0, 1fr); align-items: start; }
+  /* 幅があるときは、会話を左、状況設定を右に置く。先に読む会話を、読み始めの位置に置くため。
+     左の列はターミナルの窓と同じ幅にして、下のターミナルと左右の端をそろえる。 */
+  .panel.started .panel-body { grid-template-columns: var(--terminal-width, minmax(0, 1fr)) minmax(0, 1fr); column-gap: 24px; align-items: start; }
+  /* 列の間隔は上の問題文と同じにして、.git エクスプローラーの左端を状況設定の左端にそろえる。 */
+  .workspace { grid-template-columns: max-content minmax(0, 1fr); column-gap: 24px; align-items: start; }
   /* 横に並べるときは、.git エクスプローラーの高さをターミナルの窓に合わせる。
      ターミナルの下の注記は2行目に送り、1行目にターミナルの窓とエクスプローラーだけを置く。 */
   .terminal-col { display: contents; }
   .terminal-window { grid-column: 1; grid-row: 1; }
-  .terminal-col .note { grid-column: 1; grid-row: 2; margin-top: -8px; }
-  .explorer { grid-column: 2; grid-row: 1; }
+  /* 注記の文の長さで左の列が広がらないよう、列の幅の計算には入れず、決まった列の幅いっぱいに置く。 */
+  .terminal-col .note { grid-column: 1; grid-row: 2; margin-top: -8px; width: 0; min-width: 100%; }
+  .explorer { grid-column: 2; grid-row: 1; max-width: none; }
   /* contain: size で中身の高さを行の高さに影響させず、ターミナルの高さに引き伸ばす。中身は欄の中でスクロールする。 */
   .explorer:not(.collapsed) { align-self: stretch; contain: size; display: flex; flex-direction: column; }
   .explorer:not(.collapsed) .explorer-content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
