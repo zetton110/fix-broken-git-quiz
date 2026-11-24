@@ -424,7 +424,9 @@ const Explorer = (() => {
     return text === null ? hexdump(bytes) : el("pre", {}, linkify(text));
   }
 
-  const command = text => el("p", { class: "command" }, "コマンドで見るなら：", el("code", {}, text));
+  // 同じ内容をターミナルで見るコマンド。見出しのすぐ下（out の2番目）に置き、中身が長くてもすぐ目に入るようにする。
+  // コマンドの右にコピーのボタン（copy.js）を付け、ターミナルに貼って試せるようにする。
+  const command = text => el("p", { class: "command" }, "コマンドで見るなら：", el("code", {}, text), copyButton(() => text));
 
   function formatWho(line) {
     const match = line.match(/^(.*) (\d+) ([+-]\d{4})$/);
@@ -490,11 +492,11 @@ const Explorer = (() => {
         out.push(el("table", {},
           el("thead", {}, el("tr", {}, el("th", {}, "モード"), el("th", {}, "blob"), el("th", {}, "パス"))),
           el("tbody", {}, model.index.entries.map(e => el("tr", {}, el("td", { class: "mono" }, e.mode), el("td", {}, objectLink(e.hash)), el("td", { class: "mono" }, e.path))))));
-        out.push(command("git ls-files --stage"));
+        out.splice(1, 0, command("git ls-files --stage"));
       } else {
         out.push(el("p", { class: "warn" }, `index として読めません：${model.index ? model.index.error : "不明なエラー"}`));
         out.push(el("p", {}, "ファイルの先頭は次のとおりです。"), hexdump(bytes, 64));
-        out.push(command("head -c 16 .git/index | od -c"));
+        out.splice(1, 0, command("head -c 16 .git/index | od -c"));
       }
       return out;
     }
@@ -525,7 +527,7 @@ const Explorer = (() => {
       if (ref && ref.hash) out.push(el("p", { class: "follow" }, "指している先：", objectLink(ref.hash)));
       else if (bytes.length) out.push(el("p", { class: "warn" }, "40桁のハッシュ値として読めません。"));
     }
-    out.push(command(`cat ${rel}`));
+    out.splice(1, 0, command(`cat ${rel}`));
     return out;
   }
 
@@ -586,7 +588,7 @@ const Explorer = (() => {
       out.push(content(object.body));
     }
     out.push(...backlinks(hash));
-    out.push(command(`git cat-file -p ${short(hash)}`));
+    out.splice(1, 0, command(`git cat-file -p ${short(hash)}`));
     return out;
   }
 

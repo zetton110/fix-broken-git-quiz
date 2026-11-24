@@ -351,6 +351,9 @@ function rich(el, text, used) {
   return el;
 }
 
+// 「最初に試すコマンド」の右に、コピーのボタン（copy.js）を置く。
+$("panel-first").append(copyButton(() => $("panel-first-command").textContent));
+
 // 問題が起きた場面を、チャットの会話として表示する。
 // 1行に続ける文字数の上限。会話の欄と、状況設定の行の長さの上限（44文字）に、折り返さずに収まる長さにしてある。
 const CHAT_LINE_CHARS = 54;
